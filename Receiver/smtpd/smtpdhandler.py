@@ -20,17 +20,7 @@ class SmtpdHandler(object):
     def addMail(self, domain, envelope: Envelope):
         MessageQueueWriter.get_instance().enqueue(domain, envelope.original_content)
 
-    """
-    async def handle_AUTH(self, server, session, envelope, args):
-        server.authenticates = True
-        return S.S235_AUTH_SUCCESS.to_str()
-    """
-
     async def handle_RCPT(self, server: SMTP, session: Session, envelope: Envelope, address: str, rcpt_options):
-        #if not (address.endswith('@inboxbooster.com') or address.endswith('@monitor.inboxbooster.com')):
-        #    return '550 no relaying 1'
-        #if Customer.objects.get_password_plain_active_owner(adr_arr[1]) is None:
-        #    return '550 no relaying 4'
         envelope.rcpt_tos.append(address)
         return '250 OK'
 

@@ -1,3 +1,4 @@
+import ssl
 import os
 import sys
 import time
@@ -10,15 +11,9 @@ auth_db = {}
 
 
 def authenticator_func(server, session, envelope, mechanism, auth_data):
-    # For this simple example, we'll ignore other parameters
-    print("snus")
     assert isinstance(auth_data, LoginPassword)
     username = auth_data.login
     password = auth_data.password
-    # If we're using a set containing tuples of (username, password),
-    # we can simply use `auth_data in auth_set`.
-    # Or you can get fancy and use a full-fledged database to perform
-    # a query :-)
     if auth_db.get(username) == password:
         return AuthResult(success=True)
     else:
@@ -41,6 +36,20 @@ if __name__ == "__main__":
             sys.exit(-1)
         auth_db[username.encode('utf-8')] = password.encode('utf-8')
 
+    cert_filename = os.getenv("MANYCORE_MAIL_RECEIVER_TLS_CERT_FILENAME")
+    key_filename = os.getenv("MANYCORE_MAIL_RECEIVER_TLS_KEY_FILENAME")
+    if cert_filename is None:
+        raise ValueError("Missing MANYCORE_MAIL_RECEIVER_TLS_CERT_FILENAME")
+    if key_filename is None:
+        raise ValueError("Missing MANYCORE_MAIL_RECEIVER_TLS_KEY_FILENAME")
+
+    ignore_smtp_to_from = os.getenv("MANYCORE_IGNORE_SMTP_TO_FROM", "").lower()
+    if ignore_smtp_to_from != "true":
+        raise NotImplementedError("MANYCORE_IGNORE_SMTP_TO_FROM must be set to \"true\"")
+
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain(cert_filename, key_filename)
+
     logging.info("Starting Receiver on " + hostname + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 
     controller = Controller(
@@ -49,9 +58,11 @@ if __name__ == "__main__":
         port=port,
         authenticator=authenticator_func,  # i.e., the name of your authenticator function
         auth_required=True,  # Depending on your needs
-        auth_require_tls=False
+        auth_require_tls=True,
+        tls_context=context
     )
 
     server = controller.start()
     logging.info("Smtpd started on " + str(controller.port))
-    time.sleep(3600)
+    while True:
+        time.sleep(3600)
