@@ -21,7 +21,7 @@ pure-eval==0.2.2
 Pygments==2.13.0
 pyparsing==3.0.9
 redis==4.3.4
-reliable_queue==0.0.1
+reliable_queue==0.0.2
 six==1.16.0
 stack-data==0.6.1
 traitlets==5.5.0
