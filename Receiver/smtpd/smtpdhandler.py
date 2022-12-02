@@ -17,8 +17,11 @@ class SmtpdHandler(object):
     Q = Queue()
     stop_queue = Queue()
 
+    def __init__(self, prio_queue: str, default_queue: str):
+        self.mqw = MessageQueueWriter(prio_queue, default_queue)
+
     def addMail(self, domain, envelope: Envelope):
-        MessageQueueWriter.get_instance().enqueue(domain, envelope.original_content)
+        self.mqw.enqueue(domain, envelope.original_content)
 
     async def handle_RCPT(self, server: SMTP, session: Session, envelope: Envelope, address: str, rcpt_options):
         envelope.rcpt_tos.append(address)

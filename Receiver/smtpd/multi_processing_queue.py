@@ -10,14 +10,10 @@ from .utils import safe_sleep
 
 class MessageQueueWriter(object):
 
-    QUEUE_NAME_START = "IB-MAIL-QUEUE-P"
-    singleton_ = None  # type: MessageQueueWriter
-
-    def __init__(self):
+    def __init__(self, prio_queue: str, default_queue: str):
         self.queue = multiprocessing.Queue()  # type: multiprocessing.Queue
-        self.singleton_ = self
-        self.prio_queue = ReliableQueue(MessageQueueWriter.QUEUE_NAME_START + '0')
-        self.default_queue = ReliableQueue(MessageQueueWriter.QUEUE_NAME_START + '1')
+        self.prio_queue = ReliableQueue(prio_queue)
+        self.default_queue = ReliableQueue(default_queue)
         self.process = multiprocessing.Process(target=MessageQueueWriter.run, args=(self,))  # type: multiprocessing.Process
         self.process.start()
 
@@ -53,12 +49,6 @@ class MessageQueueWriter(object):
             else:
                 self.default_queue.push(smtp_data)
             logger.info("Enqueued email")
-
-    @classmethod
-    def get_instance(cls) -> 'MessageQueueWriter':
-        if cls.singleton_ is None:
-            cls.singleton_ = MessageQueueWriter()
-        return cls.singleton_
 
     @staticmethod
     def kill_worker():
