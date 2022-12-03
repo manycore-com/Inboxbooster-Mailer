@@ -2,10 +2,6 @@ reliable-queue:
   queue-names:
     primary-queue: IB-MAIL-QUEUE-P0
     default-queue: IB-MAIL-QUEUE-P1
-email-headers:
-  inject:
-    List-Unsubscribe: <mailto:test@example.com>
 backdata:
   queue-name:
     EVENT_QUEUE
-

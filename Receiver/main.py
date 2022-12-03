@@ -5,7 +5,7 @@ import time
 import logging
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword
-from smtpd import SmtpdHandler, MessageQueueWriter
+from smtpd import SmtpdHandler
 import yaml
 
 auth_db = {}
@@ -14,12 +14,9 @@ auth_db = {}
 def get_arg_parse_object(args):
     parser = argparse.ArgumentParser(description="Receiver")
     parser.add_argument('--global-config-file', type=str, help="Based on manycore-mail-global.yaml.example", required=True)
-    parser.add_argument('--receiver-secrets-file', type=str, help="Based on manycore-mail-receiver-secrets.yaml.example", required=True)
-    parser.add_argument('--receiver-bind-address', type=str, help='What address to bind to.', required=True)
-    parser.add_argument('--receiver-port', type=int, help='Port to listen to.', required=True)
+    parser.add_argument('--customer-config-file', type=str, help="Based on manycore-mail-customer.yaml.example", required=True)
     parser.add_argument('--tls-cert-filename', type=str, help='Cert file for TLS.', required=True)
     parser.add_argument('--tls-key-filename', type=str, help='Key file for TLS.', required=True)
-    parser.add_argument('--ignore-smtp-from', type=str, help='Ignore SMTP FROM and RCPT TO.', required=True, choices={"true"})
     return parser.parse_args()
 
 
@@ -41,17 +38,18 @@ if __name__ == "__main__":
     with open(args.global_config_file, 'r') as file:
         global_config = yaml.safe_load(file)  # dict
 
-    with open(args.receiver_secrets_file, 'r') as file:
-        receiver_secrets = yaml.safe_load(file)  # dict
+    with open(args.customer_config_file, 'r') as file:
+        customer_config = yaml.safe_load(file)  # dict
 
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
 
-    bind_address = args.receiver_bind_address
-    port = args.receiver_port
+    bind_address = customer_config["receiver"]["bind"]["inet-interface"]
+    port = customer_config["receiver"]["bind"]["inet-port"]
+    ignore_smtp_to_from = customer_config["receiver"]["ignore-smtp-mail-from-rcpt-to"]
 
-    if "receiver" in receiver_secrets and "auth-logins" in receiver_secrets["receiver"]:
-        logins = receiver_secrets["receiver"]["auth-logins"]
+    if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
+        logins = customer_config["receiver"]["auth-logins"]
         if "primary" in logins:
             auth_db[logins["primary"]["username"].encode('utf-8')] = logins["primary"]["password"].encode('utf-8')
         if "secondary" in logins:
@@ -59,8 +57,6 @@ if __name__ == "__main__":
 
     cert_filename = args.tls_cert_filename
     key_filename = args.tls_key_filename
-
-    ignore_smtp_to_from = args.ignore_smtp_from
 
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(cert_filename, key_filename)

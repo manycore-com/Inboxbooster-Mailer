@@ -25,7 +25,8 @@ class Transformer:
                  beacon_url: Optional[str],
                  fernet_key: bytes,
                  return_path_domain: str,
-                 dkim_private_key: bytes):
+                 dkim_private_key: bytes,
+                 list_unsubscribe: str):
         self.prio_queue = ReliableQueue(prio_queue_name)
         self.default_queue = ReliableQueue(default_queue_name)
         # No beacon injection in v1!
@@ -34,6 +35,7 @@ class Transformer:
         self.return_path_domain = return_path_domain
         self.fernet = Fernet(self.fernet_key)
         self.dkim_private_key = dkim_private_key
+        self.list_unsubscribe = list_unsubscribe
 
     def run(self):
         while True:
@@ -86,6 +88,8 @@ class Transformer:
             self.set_message_id(parsed_email, uuid, streamid)
 
             self.set_feedback_id(parsed_email, streamid)
+
+            # list_unsubscribe
 
             # DKIM!!!!
 
