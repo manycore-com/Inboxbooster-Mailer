@@ -1,8 +1,10 @@
 import time
+import random
 import traceback
 from typing import Optional
 from email.message import Message
 from email import message_from_bytes
+from email.utils import parseaddr
 import dkim
 from cryptography.fernet import Fernet
 from reliable_queue import ReliableQueue
@@ -26,7 +28,7 @@ class Transformer:
                  fernet_key: bytes,
                  return_path_domain: str,
                  dkim_private_key: bytes,
-                 list_unsubscribe: str):
+                 list_unsubscribe: Optional[str]):
         self.prio_queue = ReliableQueue(prio_queue_name)
         self.default_queue = ReliableQueue(default_queue_name)
         # No beacon injection in v1!
@@ -89,16 +91,14 @@ class Transformer:
 
             self.set_feedback_id(parsed_email, streamid)
 
-            # list_unsubscribe
-
-            # DKIM!!!!
+            self.set_list_unsubscribe(parsed_email)
 
             self.cleanup_headers(parsed_email)
 
-            for header in parsed_email:
-                print(str(header) + " -> " + parsed_email.get(header))
+            self.set_dkim(parsed_email)
 
-            # send to postfix
+            # TODO!! send to postfix
+            print(str(parsed_email))
 
         except Exception as ex:
             print("EXCEPTION " + str(type(ex)))
@@ -106,12 +106,36 @@ class Transformer:
             print(traceback.format_exc())
             self.error(parsed_email, str(ex), uuid, streamid, traceback.format_exc())
 
+    def set_dkim(self, parsed_email):
+        sender_domain = parseaddr(parsed_email.get("From"))[1].split('@')[1]
+        msg_data = parsed_email.as_bytes()
+        dkim_selector = "mailer"
+        # TODO add list-unsubscribe to headers to sign
+        headers = [b"To", b"From", b"Subject"]
+        sig = dkim.sign(
+            message=msg_data,
+            selector=str(dkim_selector).encode(),
+            domain=sender_domain.encode(),
+            privkey=self.dkim_private_key.encode(),
+            include_headers=headers,
+        )
+        # add the dkim signature to the email message headers.
+        # decode the signature back to string_type because later on
+        # the call to msg.as_string() performs it's own bytes encoding...
+        parsed_email["DKIM-Signature"] = sig[len("DKIM-Signature: "):].decode()
+
+    def set_list_unsubscribe(self, parsed_email: Message):
+        if self.list_unsubscribe is not None:
+            parsed_email.add_header("List-Unsubscribe", self.list_unsubscribe)
+
     def set_message_id(self, parsed_email: Message, uuid: str, streamid: str) -> bool:
-        message_id = self.fernet.encrypt(uuid.encode('utf-8')).decode('ascii') + \
-                     '.' + \
-                     self.fernet.encrypt(streamid.encode('utf-8')).decode('ascii') + \
+        message_id = '<' + \
+                     str(random.randint(10000000, 99909999)) + \
+                     '-' + \
+                     uuid + \
                      '@' + \
-                     self.return_path_domain
+                     self.return_path_domain + \
+                     '>'
         parsed_email.add_header("Message-ID", message_id)
 
     def set_feedback_id(self, parsed_email: Message, streamid: str):

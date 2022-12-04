@@ -34,6 +34,10 @@ if __name__ == "__main__":
     with open(args.fernet_keyfile, "rb") as keyfile:
         fernet_key = keyfile.read()
 
+    # the dkim library uses regex on byte strings so everything
+    # needs to be encoded from strings to bytes.
+    # a PKCS#1 private key in base64-encoded text form
+    # https://knowledge.ondmarc.redsift.com/en/articles/2141527-generating-1024-bits-dkim-public-and-private-keys-using-openssl-on-a-mac
     with open(args.dkim_private_key_file) as fh:
         dkim_private_key = fh.read()
 

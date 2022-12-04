@@ -5,4 +5,5 @@ python \
   --global-config-file=../manycore-mail-global.yaml.example \
   --customer-config-file=../manycore-mail-customer.yaml.example \
   --fernet-keyfile=../fernet-key.example \
-  --dkim-private-key-file=../../../cert/dkim.private
+  --dkim-private-key-file=../../../cert/a-cert.pem
+
