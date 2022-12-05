@@ -17,8 +17,8 @@ class SmtpdHandler(object):
     Q = Queue()
     stop_queue = Queue()
 
-    def __init__(self, prio_queue: str, default_queue: str):
-        self.mqw = MessageQueueWriter(prio_queue, default_queue)
+    def __init__(self, prio_queue: str, default_queue: str, rq_redis_host: str, rq_redis_port: int):
+        self.mqw = MessageQueueWriter(prio_queue, default_queue, rq_redis_host, rq_redis_port)
 
     def addMail(self, domain, envelope: Envelope):
         self.mqw.enqueue(domain, envelope.original_content)

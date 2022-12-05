@@ -32,9 +32,11 @@ class Transformer:
                  dkim_private_key: bytes,
                  list_unsubscribe: Optional[str],
                  postfix_hostname: str,
-                 postfix_port: int):
-        self.prio_queue = ReliableQueue(prio_queue_name)
-        self.default_queue = ReliableQueue(default_queue_name)
+                 postfix_port: int,
+                 rq_redis_host: str,
+                 rq_redis_port: int):
+        self.prio_queue = ReliableQueue(prio_queue_name, rq_redis_host, rq_redis_port)
+        self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
         # No beacon injection in v1!
         self.beacon_url = beacon_url
         self.fernet_key = fernet_key

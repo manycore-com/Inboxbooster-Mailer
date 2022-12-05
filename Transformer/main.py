@@ -31,6 +31,8 @@ if __name__ == "__main__":
 
     postfix_hostname = customer_config["transformer"]["postfix"]["hostname"]
     postfix_port = int(customer_config["transformer"]["postfix"]["port"])
+    rq_redis_host = customer_config["transformer"]["reliable-queue"]["redis"]["hostname"]
+    rq_redis_port = int(customer_config["transformer"]["reliable-queue"]["redis"]["port"])
 
     beacon_url = None  # args.beacon_url
 
@@ -53,6 +55,9 @@ if __name__ == "__main__":
         dkim_private_key,
         list_unsubscribe,
         postfix_hostname,
-        postfix_port
+        postfix_port,
+        rq_redis_host,
+        rq_redis_port
     )
+    print("Starting Transformer...")
     transformer.run()

@@ -47,6 +47,9 @@ if __name__ == "__main__":
     bind_address = customer_config["receiver"]["bind"]["inet-interface"]
     port = customer_config["receiver"]["bind"]["inet-port"]
     ignore_smtp_to_from = customer_config["receiver"]["ignore-smtp-mail-from-rcpt-to"]
+    rq_redis_host = customer_config["receiver"]["reliable-queue"]["redis"]["hostname"]
+    rq_redis_port = int(customer_config["receiver"]["reliable-queue"]["redis"]["port"])
+
 
     if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
         logins = customer_config["receiver"]["auth-logins"]
@@ -64,7 +67,7 @@ if __name__ == "__main__":
     logging.info("Starting Receiver on " + bind_address + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 
     controller = Controller(
-        SmtpdHandler(primary_queue, default_queue),
+        SmtpdHandler(primary_queue, default_queue, rq_redis_host, rq_redis_port),
         hostname=bind_address,
         port=port,
         authenticator=authenticator_func,  # i.e., the name of your authenticator function

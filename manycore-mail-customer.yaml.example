@@ -7,6 +7,10 @@ transformer:
   postfix:
     hostname: localhost
     port: 8027
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
 receiver:
   bind:
     inet-interface: localhost
@@ -21,10 +25,18 @@ receiver:
       password: dadel
   ignore-smtp-mail-from-rcpt-to:
     true
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
 mxserver:
   bind:
     inet-interface: localhost
     inet-port: 8026
   eml-directory:
     tmp
-
+backdata:
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379

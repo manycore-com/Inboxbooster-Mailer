@@ -10,10 +10,10 @@ from .utils import safe_sleep
 
 class MessageQueueWriter(object):
 
-    def __init__(self, prio_queue: str, default_queue: str):
+    def __init__(self, prio_queue: str, default_queue: str, rq_redis_host: str, rq_redis_port: int):
         self.queue = multiprocessing.Queue()  # type: multiprocessing.Queue
-        self.prio_queue = ReliableQueue(prio_queue)
-        self.default_queue = ReliableQueue(default_queue)
+        self.prio_queue = ReliableQueue(prio_queue, rq_redis_host, rq_redis_port)
+        self.default_queue = ReliableQueue(default_queue, rq_redis_host, rq_redis_port)
         self.process = multiprocessing.Process(target=MessageQueueWriter.run, args=(self,))  # type: multiprocessing.Process
         self.process.start()
 
