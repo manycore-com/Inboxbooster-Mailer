@@ -1,8 +1,10 @@
 import time
 import random
 import traceback
+from smtplib import SMTP as Client
 from typing import Optional
 from email.message import Message
+from email.utils import getaddresses
 from email import message_from_bytes
 from email.utils import parseaddr
 import dkim
@@ -28,7 +30,9 @@ class Transformer:
                  fernet_key: bytes,
                  return_path_domain: str,
                  dkim_private_key: bytes,
-                 list_unsubscribe: Optional[str]):
+                 list_unsubscribe: Optional[str],
+                 postfix_hostname: str,
+                 postfix_port: int):
         self.prio_queue = ReliableQueue(prio_queue_name)
         self.default_queue = ReliableQueue(default_queue_name)
         # No beacon injection in v1!
@@ -38,6 +42,8 @@ class Transformer:
         self.fernet = Fernet(self.fernet_key)
         self.dkim_private_key = dkim_private_key
         self.list_unsubscribe = list_unsubscribe
+        self.postfix_hostname = postfix_hostname
+        self.postfix_port = postfix_port
 
     def run(self):
         while True:
@@ -58,7 +64,6 @@ class Transformer:
                     break
             if not any:
                 time.sleep(1)
-            break                         ####### remove
 
     def transform(self, msg: bytes):
         parsed_email = None
@@ -97,8 +102,14 @@ class Transformer:
 
             self.set_dkim(parsed_email)
 
-            # TODO!! send to postfix
-            print(str(parsed_email))
+            # TODO!! Cache connection!
+            client = Client(self.postfix_hostname, self.postfix_port)
+            return_path = "return--" + uuid + "@" + self.return_path_domain
+            message_as_bytes = parsed_email.as_bytes()
+            for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
+                rcpt_to = addr_tuple[1]
+                client.sendmail(return_path, [rcpt_to], message_as_bytes)
+            client.close()
 
         except Exception as ex:
             print("EXCEPTION " + str(type(ex)))

@@ -29,6 +29,9 @@ if __name__ == "__main__":
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
     return_path_domain = customer_config["transformer"]["return-path-domain"]
 
+    postfix_hostname = customer_config["transformer"]["postfix"]["hostname"]
+    postfix_port = int(customer_config["transformer"]["postfix"]["port"])
+
     beacon_url = None  # args.beacon_url
 
     with open(args.fernet_keyfile, "rb") as keyfile:
@@ -41,5 +44,15 @@ if __name__ == "__main__":
     with open(args.dkim_private_key_file) as fh:
         dkim_private_key = fh.read()
 
-    transformer = Transformer(primary_queue, default_queue, beacon_url, fernet_key, return_path_domain, dkim_private_key, list_unsubscribe)
+    transformer = Transformer(
+        primary_queue,
+        default_queue,
+        beacon_url,
+        fernet_key,
+        return_path_domain,
+        dkim_private_key,
+        list_unsubscribe,
+        postfix_hostname,
+        postfix_port
+    )
     transformer.run()

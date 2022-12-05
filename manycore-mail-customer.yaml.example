@@ -4,6 +4,9 @@ transformer:
       List-Unsubscribe: <mailto:unsub--test@example.com>
   return-path-domain:
     example.com
+  postfix:
+    hostname: localhost
+    port: 8027
 receiver:
   bind:
     inet-interface: localhost
