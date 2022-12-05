@@ -28,9 +28,7 @@ class BackDataTest {
 
         val args = listOf<String>(
             "--global-config-file", "../manycore-mail-global.yaml.example",
-            "--redishost", "localhost",
-            "--redisport", "6379",
-            "--post-url", "http://localhost:8090",
+            "--customer-config-file", "../manycore-mail-customer.yaml.example",
         )
 
         BackData.main(args.toTypedArray())

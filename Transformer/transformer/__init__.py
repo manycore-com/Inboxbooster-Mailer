@@ -73,6 +73,7 @@ class Transformer:
         streamid = None
         try:
             parsed_email = message_from_bytes(msg)  # type: Message
+            print("Got message: " + parsed_email.get("Subject", ""))
 
             # Assume X-Uuid exists for now.
             uuid = parsed_email.get("X-Uuid")
@@ -111,6 +112,7 @@ class Transformer:
             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                 rcpt_to = addr_tuple[1]
                 client.sendmail(return_path, [rcpt_to], message_as_bytes)
+                print("Sent message to " + rcpt_to)
             client.close()
 
         except Exception as ex:

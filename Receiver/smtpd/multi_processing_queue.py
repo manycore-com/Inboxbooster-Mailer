@@ -17,9 +17,9 @@ class MessageQueueWriter(object):
         self.process = multiprocessing.Process(target=MessageQueueWriter.run, args=(self,))  # type: multiprocessing.Process
         self.process.start()
 
-    def enqueue(self, dedicated_domain: str, smtp_data):
-        logger.info("Enqueue of domain '" + dedicated_domain + "'")
-        self.queue.put((dedicated_domain, smtp_data))
+    def enqueue(self, smtp_data):
+        logger.info("Enqueue of message")
+        self.queue.put(smtp_data)
 
     @staticmethod
     def parse_smtp_headers(parsed_email: Message):
@@ -41,14 +41,14 @@ class MessageQueueWriter(object):
     def run(self):
         safe_sleep(1)
         while True:
-            dedicated_domain, smtp_data = self.queue.get()
+            smtp_data = self.queue.get()
             parsed_email = message_from_bytes(smtp_data)
             smtp_rcpt, smtp_from, ip, priority = MessageQueueWriter.parse_smtp_headers(parsed_email)
             if 0 == priority:
                 self.prio_queue.push(smtp_data)
             else:
                 self.default_queue.push(smtp_data)
-            logger.info("Enqueued email")
+            logger.info("Enqueued email to RQ")
 
     @staticmethod
     def kill_worker():

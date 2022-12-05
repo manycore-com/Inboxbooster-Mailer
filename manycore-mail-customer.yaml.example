@@ -40,3 +40,4 @@ backdata:
     redis:
       hostname: localhost
       port: 6379
+  post-url: http://localhost:8090

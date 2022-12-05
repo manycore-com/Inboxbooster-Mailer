@@ -57,17 +57,29 @@ class BackData {
             val parser = ArgParser("BackData")
 
             // TODO add global settings yaml
-            val globalConfigFile by parser.option(ArgType.String, fullName = "global-config-file", description = "Same global config file as for Receiver and Transformer.").required()
-            val redisHost        by parser.option(ArgType.String, fullName = "redishost",          description = "Redis hostname (for reliable queue)").required()
-            val redisPort        by parser.option(ArgType.Int,    fullName = "redisport",          description = "Redis port (for reliable queue)").required()
-            val postUrl          by parser.option(ArgType.String, fullName = "post-url",           description = "Where to post the urls")
+            val globalConfigFile   by parser.option(ArgType.String, fullName = "global-config-file",   description = "Same global config file as for Receiver and Transformer.").required()
+            val customerConfigFile by parser.option(ArgType.String, fullName = "customer-config-file", description = "Customer specific configuration").required()
             parser.parse(args)
 
-            val yaml = Yaml()
+            var yaml = Yaml()
             val globalConfig: Map<String, Any> = yaml.load(File(globalConfigFile).inputStream())
             val queueName = ((globalConfig["backdata"]) as LinkedHashMap<String,String>)["queue-name"]
 
-            val bd = BackData(redisHost, redisPort, queueName!!, postUrl!!)
+            yaml = Yaml()
+            val customerConfig: Map<String, Any> = yaml.load(File(customerConfigFile).inputStream())
+            val backDataSection = ((customerConfig["backdata"]) as LinkedHashMap<String,String>)
+            val reliableQueueSection = ((backDataSection["reliable-queue"]) as LinkedHashMap<String,String>)
+            val redisSection = ((reliableQueueSection["redis"]) as LinkedHashMap<String,String>)
+            val pv: Any = redisSection["port"]!!
+            val port: Int = if (pv is Int) {
+                pv
+            } else if (pv is String) {
+                pv.toInt()
+            } else {
+                -1
+            }
+
+            val bd = BackData(redisSection["hostname"]!!, port, queueName!!, backDataSection["post-url"]!!)
             bd.execute()
         }
     }

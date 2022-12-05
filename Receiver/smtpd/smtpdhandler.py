@@ -20,8 +20,8 @@ class SmtpdHandler(object):
     def __init__(self, prio_queue: str, default_queue: str, rq_redis_host: str, rq_redis_port: int):
         self.mqw = MessageQueueWriter(prio_queue, default_queue, rq_redis_host, rq_redis_port)
 
-    def addMail(self, domain, envelope: Envelope):
-        self.mqw.enqueue(domain, envelope.original_content)
+    def addMail(self, envelope: Envelope):
+        self.mqw.enqueue(envelope.original_content)
 
     async def handle_RCPT(self, server: SMTP, session: Session, envelope: Envelope, address: str, rcpt_options):
         envelope.rcpt_tos.append(address)
@@ -30,7 +30,7 @@ class SmtpdHandler(object):
     async def handle_DATA(self, server: SMTP, session: Session, envelope: Envelope):
         try:
             assert len(envelope.rcpt_tos) == 1
-            self.addMail("example.com", envelope)
+            self.addMail(envelope)
             return '250 Message accepted for delivery'
         except Exception as err:
             logger.error("unknown exception")
