@@ -18,3 +18,10 @@ receiver:
       password: dadel
   ignore-smtp-mail-from-rcpt-to:
     true
+mxserver:
+  bind:
+    inet-interface: localhost
+    inet-port: 8026
+  eml-directory:
+    tmp
+
