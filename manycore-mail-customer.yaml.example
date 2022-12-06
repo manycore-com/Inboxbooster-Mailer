@@ -11,6 +11,7 @@ transformer:
     redis:
       hostname: localhost
       port: 6379
+  log-directory: logs
 receiver:
   bind:
     inet-interface: localhost
@@ -29,15 +30,26 @@ receiver:
     redis:
       hostname: localhost
       port: 6379
+  log-directory: logs
 mxserver:
   bind:
     inet-interface: localhost
     inet-port: 8026
   eml-directory:
     tmp
+  log-directory: logs
 backdata:
   reliable-queue:
     redis:
       hostname: localhost
       port: 6379
   post-url: http://localhost:8090
+  log-directory: logs
+postfixlog:
+  logfile: /var/log/mail.log
+  locationfile: /tmp/postfixlog-location
+  log-directory: logs
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379

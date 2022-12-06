@@ -113,6 +113,7 @@ class Transformer:
                 rcpt_to = addr_tuple[1]
                 client.sendmail(return_path, [rcpt_to], message_as_bytes)
                 print("Sent message to " + rcpt_to)
+                # TODO add webhook
             client.close()
 
         except Exception as ex:

@@ -1,0 +1,5 @@
+async-timeout==4.0.2
+certifi==2022.9.24
+PyYAML==6.0
+redis==4.4.0
+reliable-queue==0.0.3

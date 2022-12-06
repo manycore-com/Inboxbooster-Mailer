@@ -1,8 +1,10 @@
+import os
 import argparse
 import ssl
 import sys
 import time
 import logging
+from logging.handlers import RotatingFileHandler
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword
 from smtpd import SmtpdHandler
@@ -49,7 +51,17 @@ if __name__ == "__main__":
     ignore_smtp_to_from = customer_config["receiver"]["ignore-smtp-mail-from-rcpt-to"]
     rq_redis_host = customer_config["receiver"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["receiver"]["reliable-queue"]["redis"]["port"])
-
+    # log_directory = customer_config["receiver"]["log-directory"]
+    # if not log_directory.endswith("/"):
+    #     log_directory = log_directory + "/"
+    #
+    # handler = RotatingFileHandler(log_directory + "receiver.log", maxBytes=1000000, backupCount=10)
+    # formatter = logging.Formatter('%(asctime)s - %(process)6d - %(levelname)-8s - %(message)s')
+    # handler.setFormatter(formatter)
+    # logger = logging.getLogger()
+    # logger.handlers.clear()
+    # logger.addHandler(handler)
+    # logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'INFO'))
 
     if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
         logins = customer_config["receiver"]["auth-logins"]
