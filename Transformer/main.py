@@ -9,7 +9,6 @@ def get_arg_parse_object(args):
     parser.add_argument('--global-config-file', type=str, help="Based on manycore-mail-global.yaml.", required=True)
     parser.add_argument('--customer-config-file', type=str, help="Based on manycore-mail-customer.yaml.", required=True)
     # v1.5 parser.add_argument('--beacon-url', type=str, help='If we want to inject beacons. ex: https://example.com/1-1234-234', required=False)
-    parser.add_argument('--fernet-keyfile', type=str, help="Binary file with a Fernet symmetrical key.", required=True)
     parser.add_argument('--dkim-private-key-file', type=str, help="Private key for signing dkim", required=True)
     return parser.parse_args()
 
@@ -36,9 +35,6 @@ if __name__ == "__main__":
 
     beacon_url = None  # args.beacon_url
 
-    with open(args.fernet_keyfile, "rb") as keyfile:
-        fernet_key = keyfile.read()
-
     # the dkim library uses regex on byte strings so everything
     # needs to be encoded from strings to bytes.
     # a PKCS#1 private key in base64-encoded text form
@@ -50,7 +46,6 @@ if __name__ == "__main__":
         primary_queue,
         default_queue,
         beacon_url,
-        fernet_key,
         return_path_domain,
         dkim_private_key,
         list_unsubscribe,

@@ -8,7 +8,6 @@ from email.utils import getaddresses
 from email import message_from_bytes
 from email.utils import parseaddr
 import dkim
-from cryptography.fernet import Fernet
 from reliable_queue import ReliableQueue
 
 """
@@ -27,7 +26,6 @@ class Transformer:
                  prio_queue_name: str,
                  default_queue_name: str,
                  beacon_url: Optional[str],
-                 fernet_key: bytes,
                  return_path_domain: str,
                  dkim_private_key: bytes,
                  list_unsubscribe: Optional[str],
@@ -39,9 +37,7 @@ class Transformer:
         self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
         # No beacon injection in v1!
         self.beacon_url = beacon_url
-        self.fernet_key = fernet_key
         self.return_path_domain = return_path_domain
-        self.fernet = Fernet(self.fernet_key)
         self.dkim_private_key = dkim_private_key
         self.list_unsubscribe = list_unsubscribe
         self.postfix_hostname = postfix_hostname
@@ -154,9 +150,9 @@ class Transformer:
 
     def set_feedback_id(self, parsed_email: Message, streamid: str):
         from_email = parsed_email["From"]
-        feedback_id = self.fernet.encrypt(streamid.encode('utf-8')).decode('ascii') + \
+        feedback_id = streamid + \
                       '.' + \
-                      self.fernet.encrypt(from_email.encode('utf-8')).decode('ascii')
+                      from_email
         parsed_email.add_header("Feedback-ID", feedback_id)
 
     def cleanup_headers(self, parsed_email: Message):
