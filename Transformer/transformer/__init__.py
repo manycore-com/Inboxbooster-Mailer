@@ -146,8 +146,6 @@ class Transformer:
 
     def set_message_id(self, parsed_email: Message, uuid: str, streamid: str) -> bool:
         message_id = '<' + \
-                     str(random.randint(10000000, 99909999)) + \
-                     '-' + \
                      uuid + \
                      '@' + \
                      self.return_path_domain + \
