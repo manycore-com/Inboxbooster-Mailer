@@ -1,5 +1,4 @@
 import time
-import random
 import traceback
 from smtplib import SMTP as Client
 from typing import Optional
@@ -136,9 +135,10 @@ class Transformer:
         # the call to msg.as_string() performs it's own bytes encoding...
         parsed_email["DKIM-Signature"] = sig[len("DKIM-Signature: "):].decode()
 
-    def set_list_unsubscribe(self, parsed_email: Message):
+    def set_list_unsubscribe(self, parsed_email: Message, uuid: str):
+        unsub = self.list_unsubscribe.replace("{{uuid}}", uuid)
         if self.list_unsubscribe is not None:
-            parsed_email.add_header("List-Unsubscribe", self.list_unsubscribe)
+            parsed_email.add_header("List-Unsubscribe", unsub)
 
     def set_message_id(self, parsed_email: Message, uuid: str, streamid: str) -> bool:
         message_id = '<' + \
