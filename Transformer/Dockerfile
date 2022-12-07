@@ -1,6 +1,6 @@
 # https://docs.docker.com/language/python/build-images/
 
-# docker build -t inboxbooster/inboxbooster-transformer:latest .
+# docker build -t inboxbooster/transformer:latest .
 
 
 FROM python:3.10-bullseye
@@ -15,6 +15,7 @@ RUN mkdir -p /app/logs
 COPY . .
 
 CMD [ "python3", "main.py", \
-  "--global-config-file=/configvolume/manycore-mail-global.yaml", \
-  "--customer-config-file=/configvolume/manycore-mail-customer.yaml", \
-  "--dkim-private-key-file=/configvolume/dkim-private-key.pem" ]
+  "--global-config-file=/configs/manycore-mail-global.yaml", \
+  "--customer-config-file=/configs/manycore-mail-customer.yaml", \
+  "--dkim-private-key-file=/configs/dkim-private-key.pem" ]
+

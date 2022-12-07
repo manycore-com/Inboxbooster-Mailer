@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-# docker build -t inboxbooster/inboxbooster-postfix:latest .
+# docker build -t inboxbooster/postfix:latest .
 
 WORKDIR /app
 
@@ -24,5 +24,6 @@ COPY . .
 # Need to start/restart postfix?
 
 CMD [ "python3", "main.py", \
-  "--global-config-file=/configvolume/manycore-mail-global.yaml", \
-  "--customer-config-file=/configvolume/manycore-mail-customer.yaml"]
+  "--global-config-file=/configs/manycore-mail-global.yaml", \
+  "--customer-config-file=/configs/manycore-mail-customer.yaml"]
+

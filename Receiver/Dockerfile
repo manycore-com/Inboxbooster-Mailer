@@ -1,6 +1,6 @@
 # https://docs.docker.com/language/python/build-images/
 
-# docker build -t inboxbooster/inboxbooster-receiver:latest .
+# docker build -t inboxbooster/receiver:latest .
 
 FROM python:3.10-bullseye
 
@@ -14,7 +14,8 @@ RUN mkdir -p /app/logs
 COPY . .
 
 CMD [ "python3", "main.py", \
-  "--global-config-file=/configvolume/manycore-mail-global.yaml", \
-  "--customer-config-file=/configvolume/manycore-mail-customer.yaml", \
-  "--tls-cert-filename=/configvolume/receiver_cert.pem", \
-  "--tls-key-filename=/configvolume/receiver_key.pem" ]
+  "--global-config-file=/configs/manycore-mail-global.yaml", \
+  "--customer-config-file=/configs/manycore-mail-customer.yaml", \
+  "--tls-cert-filename=/configs/receiver_cert.pem", \
+  "--tls-key-filename=/configs/receiver_key.pem" ]
+
