@@ -1,0 +1,17 @@
+# kubectl create -f pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postfix
+spec:
+  containers:
+    - name: postfix
+      image: inboxbooster/postfix
+      volumeMounts:
+        - name: configs
+          mountPath: "/configs"
+          readOnly: true
+  volumes:
+    - name: configs
+      configMap:
+        name: inboxbooster-config

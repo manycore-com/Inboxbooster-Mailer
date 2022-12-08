@@ -1,0 +1,19 @@
+# kubectl create -f pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: receiver
+spec:
+  containers:
+    - name: receiver
+      image: inboxbooster/receiver
+      ports:
+        - containerPort: 587
+      volumeMounts:
+        - name: configs
+          mountPath: "/configs"
+          readOnly: true
+  volumes:
+    - name: configs
+      configMap:
+        name: inboxbooster-config

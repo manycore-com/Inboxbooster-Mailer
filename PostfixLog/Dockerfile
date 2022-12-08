@@ -1,6 +1,7 @@
 FROM ubuntu:22.04
 
 # docker build -t inboxbooster/postfix:latest .
+# docker push inboxbooster/postfix
 
 WORKDIR /app
 

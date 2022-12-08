@@ -1,0 +1,19 @@
+# kubectl create -f pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mxserver
+spec:
+  containers:
+    - name: mxserver
+      image: inboxbooster/mxserver
+      ports:
+        - containerPort: 25
+      volumeMounts:
+        - name: configs
+          mountPath: "/configs"
+          readOnly: true
+  volumes:
+    - name: configs
+      configMap:
+        name: inboxbooster-config
