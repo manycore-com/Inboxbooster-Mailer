@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: mxserver
+  labels:
+    app: mxserver
 spec:
   containers:
     - name: mxserver
@@ -13,6 +15,7 @@ spec:
         - name: configs
           mountPath: "/configs"
           readOnly: true
+      imagePullPolicy: Always
   volumes:
     - name: configs
       configMap:

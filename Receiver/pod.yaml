@@ -13,6 +13,7 @@ spec:
         - name: configs
           mountPath: "/configs"
           readOnly: true
+      imagePullPolicy: Always
   volumes:
     - name: configs
       configMap:

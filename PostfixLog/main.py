@@ -50,25 +50,26 @@ if __name__ == "__main__":
     pl = PostfixLog(reliable_queue)
 
     while True:
-        with open(postfix_logfile, "r") as f:
-            at_line = 0
-            line = f.readline()
-            if line:
-                line = line.strip()
-                if line != location_firstline:
-                    logging.info("Resetting locations file. Got new firstline")
-                    location_firstline = line
-                    location_lineno = 0
-            while line:
-                at_line += 1
-                line = line.strip()
-                if at_line > location_lineno:
-                    pl.process_line(line)
+        if os.path.isfile(postfix_logfile):
+            with open(postfix_logfile, "r") as f:
+                at_line = 0
                 line = f.readline()
-        with open(location_file, "w") as f:
-            f.write(location_firstline)
-            f.write("\n")
-            f.write(str(at_line))
-            f.write("\n")
-        time.sleep(20)
+                if line:
+                    line = line.strip()
+                    if line != location_firstline:
+                        logging.info("Resetting locations file. Got new firstline")
+                        location_firstline = line
+                        location_lineno = 0
+                while line:
+                    at_line += 1
+                    line = line.strip()
+                    if at_line > location_lineno:
+                        pl.process_line(line)
+                    line = f.readline()
+            with open(location_file, "w") as f:
+                f.write(location_firstline)
+                f.write("\n")
+                f.write(str(at_line))
+                f.write("\n")
+            time.sleep(20)
 

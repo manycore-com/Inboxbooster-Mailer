@@ -16,7 +16,7 @@ class BackData {
     var reliableQueue: ReliableQueue
     val postUrl: String
     constructor(redisHost: String, redisPort: Int, queueName: String, postUrl: String) {
-        this.reliableQueue = ReliableQueue("127.0.0.1", 6379, queueName, 50)
+        this.reliableQueue = ReliableQueue(redisHost, redisPort, queueName, 50)
         this.postUrl = postUrl
     }
 

@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: postfix
+  labels:
+    app: postfix
 spec:
   containers:
     - name: postfix
@@ -11,6 +13,7 @@ spec:
         - name: configs
           mountPath: "/configs"
           readOnly: true
+      imagePullPolicy: Always
   volumes:
     - name: configs
       configMap:

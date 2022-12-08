@@ -18,13 +18,13 @@ RUN mkdir -p /app/logs
 
 COPY requirements.txt requirements.txt
 
+COPY startscript.sh .
+
 RUN pip3 install -r requirements.txt
 
 COPY . .
 
 # Need to start/restart postfix?
 
-CMD [ "python3", "main.py", \
-  "--global-config-file=/configs/manycore-mail-global.yaml", \
-  "--customer-config-file=/configs/manycore-mail-customer.yaml"]
+CMD [ "/bin/bash", "startscript.sh"]
 

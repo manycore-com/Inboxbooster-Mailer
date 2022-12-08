@@ -1,8 +1,11 @@
 # kubectl create -f pod.yaml
+
 apiVersion: v1
 kind: Pod
 metadata:
   name: redis
+  labels:
+    app: redis
 spec:
   containers:
     - name: redis
