@@ -27,13 +27,13 @@ class BackData {
             val payload: String? = if (events == null) {
                 null
             } else if (events.size == 1) {
-                "{\"events\":" + String(events!![0], Charsets.UTF_8) + "}"
+                "[" + String(events!![0], Charsets.UTF_8) + "]"
             } else {
                 val list = mutableListOf<String>()
                 events.forEach() {
                     list.add(String(it, Charsets.UTF_8))
                 }
-                "{\"events\":" + list.joinToString(",") + "}"
+                "[" + list.joinToString(",") + "]"
             }
 
             println("POST " + payload)
