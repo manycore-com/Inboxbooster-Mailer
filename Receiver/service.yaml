@@ -1,0 +1,14 @@
+# kubectl create -f service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: receiver
+spec:
+  ports:
+  - name: my-port
+    port: 587
+    protocol: TCP
+    targetPort: 587
+  selector:
+    app: receiver
+  type: ClusterIP
