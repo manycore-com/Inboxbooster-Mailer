@@ -1,3 +1,4 @@
+import logging
 import time
 import traceback
 from smtplib import SMTP as Client
@@ -63,6 +64,7 @@ class Transformer:
                 time.sleep(1)
 
     def transform(self, msg: bytes):
+        logging.info("New message. size:" + str(len(msg)))
         parsed_email = None
         uuid = None
         streamid = None
@@ -94,7 +96,7 @@ class Transformer:
 
             self.set_feedback_id(parsed_email, streamid)
 
-            self.set_list_unsubscribe(parsed_email)
+            self.set_list_unsubscribe(parsed_email, uuid)
 
             self.cleanup_headers(parsed_email)
 
@@ -107,14 +109,14 @@ class Transformer:
             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                 rcpt_to = addr_tuple[1]
                 client.sendmail(return_path, [rcpt_to], message_as_bytes)
-                print("Sent message to " + rcpt_to)
+                logging.info("Sent message to " + rcpt_to)
                 # TODO add webhook
             client.close()
 
         except Exception as ex:
-            print("EXCEPTION " + str(type(ex)))
-            print(str(ex))
-            print(traceback.format_exc())
+            logging.error("EXCEPTION " + str(type(ex)))
+            logging.error(str(ex))
+            logging.error(traceback.format_exc())
             self.error(parsed_email, str(ex), uuid, streamid, traceback.format_exc())
 
     def set_dkim(self, parsed_email):
@@ -165,4 +167,5 @@ class Transformer:
 
     # Open question: should we add To, From, Subject in the error, if they are available?
     def error(self, parsed_email: Optional[Message], msg: str, uuid: Optional[str], streamid: Optional[str], stacktrace: str):
-        print("error function called. " + str(msg))
+        # TODO create error webhook
+        logging.error("error function called. " + str(msg))

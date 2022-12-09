@@ -1,6 +1,7 @@
 # https://docs.docker.com/language/python/build-images/
 
 # docker build -t inboxbooster/transformer:latest .
+# docker push inboxbooster/transformer
 
 
 FROM python:3.10-bullseye

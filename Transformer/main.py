@@ -2,6 +2,7 @@ import argparse
 import sys
 import yaml
 from transformer import Transformer
+import logging
 
 
 def get_arg_parse_object(args):
@@ -14,6 +15,10 @@ def get_arg_parse_object(args):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+
+    logging.info("Starting Transformer...")
+
     args = get_arg_parse_object(sys.argv[1:])
 
     with open(args.global_config_file, 'r') as file:
@@ -39,9 +44,11 @@ if __name__ == "__main__":
     # needs to be encoded from strings to bytes.
     # a PKCS#1 private key in base64-encoded text form
     # https://knowledge.ondmarc.redsift.com/en/articles/2141527-generating-1024-bits-dkim-public-and-private-keys-using-openssl-on-a-mac
+    logging.info("Reading dkim...")
     with open(args.dkim_private_key_file) as fh:
         dkim_private_key = fh.read()
 
+    logging.info("Instantiating Transformer object....")
     transformer = Transformer(
         primary_queue,
         default_queue,
@@ -54,5 +61,5 @@ if __name__ == "__main__":
         rq_redis_host,
         rq_redis_port
     )
-    print("Starting Transformer...")
+    logging.info("Running Transformer loop...")
     transformer.run()

@@ -40,10 +40,13 @@ alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
 mydestination = $myhostname, snat-0, localhost.localdomain, localhost
 relayhost = 
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 10.0.0.0/8
 mailbox_size_limit = 0
 recipient_delimiter = +
-inet_interfaces = localhost
+# Danger! Never have an open relay on the internet! You will burn your
+# ip address in minutes.
+# Here it is ok because it is inside a Kubernetes pod.
+inet_interfaces = all
 inet_protocols = ipv4
 maximal_queue_lifetime = 12h
 

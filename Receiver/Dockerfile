@@ -1,6 +1,7 @@
 # https://docs.docker.com/language/python/build-images/
 
 # docker build -t inboxbooster/receiver:latest .
+# docker push inboxbooster/receiver
 
 FROM python:3.10-bullseye
 
