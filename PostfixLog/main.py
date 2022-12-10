@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 f.write("\n")
                 f.write(str(at_line))
                 f.write("\n")
-                logging.debug("Currently at_line=" + str(at_line))
+                #logging.debug("Currently at_line=" + str(at_line))
                 location_lineno = at_line
             time.sleep(20)
 

@@ -41,16 +41,29 @@ class PostfixLog:
                         self.reliable_queue.push(json.dumps(event).encode("utf-8"))
                         logging.info(str(event))
                     elif cache.status in ["deferred", "bounced", "expired"]:
+                        if cache.response_code is None:
+                            bounceType = None
+                        elif cache.response_code >= 500 and cache.response_code < 599:
+                            bounceType = 'hard'
+                        elif cache.response_code >= 400 and cache.response_code < 499:
+                            bounceType = 'soft'
+                        else:
+                            bounceType = str(cache.response_code)
+
                         event = {
                             "event": "bounce",
                             "uuid": cache.uuid,
                             "timestamp": int(time.time()),
                             "ip": cache.ip,
-                            "type": "hard or soft",  # TODO
+                            "type": str(bounceType),
                             "reason": cache.status_message
                         }
-                        self.reliable_queue.push(json.dumps(event).encode("utf-8"))
-                        logging.info(str(event))
+
+                        if bounceType is None:
+                            logging.warning("Can not deduce bounce type: " + str(json.dumps(event)))
+                        else:
+                            self.reliable_queue.push(json.dumps(event).encode("utf-8"))
+                            logging.info(str(event))
                     else:
                         logging.warning("Unexpected status=" + str(cache.status) + " for " + str(filename))
                 self.lruCache.delete(filename)

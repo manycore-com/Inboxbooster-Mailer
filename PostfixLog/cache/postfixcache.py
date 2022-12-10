@@ -1,3 +1,4 @@
+import logging
 import re
 
 
@@ -8,11 +9,13 @@ class PostfixCache:
         self.match_status = re.compile(r'.*status=([a-zA-Z0-9-_.]+) (.*)?')
         self.match_message_id = re.compile(r'.*message-id=<(.*)>')
         self.match_relay = re.compile(r'.*relay=([a-zA-Z0-9-._]+)\[(.*)\]:([0-9]+)')
+        self.match_response_code = re.compile(r'.*said: ([0-9]{3})(-| |\.){1}')
         self.status = None
         self.status_message = None
         self.uuid = None
         self.attempt = 0
         self.ip = None
+        self.response_code = None
 
     def add_data(self, data: str):
         if data == "removed":
@@ -21,6 +24,14 @@ class PostfixCache:
             message_id_match = self.match_message_id.match(data)
             status_match = self.match_status.match(data)
             relay_match = self.match_relay.match(data)
+            response_code_match = self.match_response_code.match(data)
+            if response_code_match:
+                groups = response_code_match.groups()
+                if 2 == len(groups):
+                    try:
+                        self.response_code = int(groups[0])
+                    except Exception as e:
+                        logging.warning("Broken match on said: line: " + data)
             if relay_match:
                 split_on_relay = data.split(relay_match.group(1))
                 if 2 <= len(split_on_relay):
