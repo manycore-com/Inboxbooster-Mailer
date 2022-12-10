@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cp /configs/mailname /etc/mailname
+service syslog-ng start
 service postfix start
 cat /etc/mailname
 sleep 2
