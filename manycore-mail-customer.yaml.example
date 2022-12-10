@@ -1,9 +1,7 @@
 transformer:
   email-headers:
     inject:
-      List-Unsubscribe: <mailto:unsub--test@example.com>
-  return-path-domain:
-    example.com
+      List-Unsubscribe: <mailto:unsub-{{uuid}}@{{from-domain}}>
   postfix:
     hostname: localhost
     port: 8027
@@ -12,6 +10,10 @@ transformer:
       hostname: localhost
       port: 6379
   log-directory: logs
+  # Feel free to add multiple dkim configurations.
+  dkim:
+   - domain: example.com
+     dkim-private-key-file: ../../../cert/dkim-test-private.key
 receiver:
   bind:
     inet-interface: localhost

@@ -17,6 +17,5 @@ COPY . .
 
 CMD [ "python3", "main.py", \
   "--global-config-file=/configs/manycore-mail-global.yaml", \
-  "--customer-config-file=/configs/manycore-mail-customer.yaml", \
-  "--dkim-private-key-file=/configs/dkim-private-key.pem" ]
+  "--customer-config-file=/configs/manycore-mail-customer.yaml" ]
 

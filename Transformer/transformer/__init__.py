@@ -4,7 +4,7 @@ import traceback
 from smtplib import SMTP as Client
 from typing import Optional
 from email.message import Message
-from email.utils import getaddresses
+from email.utils import getaddresses, parseaddr
 from email import message_from_bytes
 from email.utils import parseaddr
 import dkim
@@ -26,8 +26,7 @@ class Transformer:
                  prio_queue_name: str,
                  default_queue_name: str,
                  beacon_url: Optional[str],
-                 return_path_domain: str,
-                 dkim_private_key: bytes,
+                 dkim_configuration: dict,
                  list_unsubscribe: Optional[str],
                  postfix_hostname: str,
                  postfix_port: int,
@@ -37,8 +36,7 @@ class Transformer:
         self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
         # No beacon injection in v1!
         self.beacon_url = beacon_url
-        self.return_path_domain = return_path_domain
-        self.dkim_private_key = dkim_private_key
+        self.dkim_configuration = dkim_configuration
         self.list_unsubscribe = list_unsubscribe
         self.postfix_hostname = postfix_hostname
         self.postfix_port = postfix_port
@@ -70,7 +68,9 @@ class Transformer:
         streamid = None
         try:
             parsed_email = message_from_bytes(msg)  # type: Message
-            print("Got message: " + parsed_email.get("Subject", ""))
+            from_address = parseaddr(parsed_email.get("From"))[1]
+            from_address_domain = from_address.split('@')[1].lower()
+            print("Got message: from=" + from_address + " subject=" + parsed_email.get("Subject", ""))
 
             # Assume X-Uuid exists for now.
             uuid = parsed_email.get("X-Uuid")
@@ -92,19 +92,19 @@ class Transformer:
                 self.error(parsed_email, "Found a pre-existing Message-ID", uuid, streamid, "")
                 return
 
-            self.set_message_id(parsed_email, uuid, streamid)
+            self.set_message_id(parsed_email, uuid, from_address_domain)
 
             self.set_feedback_id(parsed_email, streamid)
 
-            self.set_list_unsubscribe(parsed_email, uuid)
+            self.set_list_unsubscribe(parsed_email, uuid, from_address_domain)
 
             self.cleanup_headers(parsed_email)
 
-            self.set_dkim(parsed_email)
+            self.set_dkim(parsed_email, from_address_domain)
 
             # TODO!! Cache connection!
             client = Client(self.postfix_hostname, self.postfix_port)
-            return_path = "return--" + uuid + "@" + self.return_path_domain
+            return_path = "return--" + uuid + "@" + from_address_domain
             message_as_bytes = parsed_email.as_bytes()
             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                 rcpt_to = addr_tuple[1]
@@ -119,8 +119,7 @@ class Transformer:
             logging.error(traceback.format_exc())
             self.error(parsed_email, str(ex), uuid, streamid, traceback.format_exc())
 
-    def set_dkim(self, parsed_email):
-        sender_domain = parseaddr(parsed_email.get("From"))[1].split('@')[1]
+    def set_dkim(self, parsed_email, from_address_domain):
         msg_data = parsed_email.as_bytes()
         dkim_selector = "mailer"
         # TODO add list-unsubscribe to headers to sign
@@ -128,8 +127,8 @@ class Transformer:
         sig = dkim.sign(
             message=msg_data,
             selector=str(dkim_selector).encode(),
-            domain=sender_domain.encode(),
-            privkey=self.dkim_private_key.encode(),
+            domain=from_address_domain.encode(),
+            privkey=self.dkim_configuration[from_address_domain]["dkim_private_key"].encode(),
             include_headers=headers,
         )
         # add the dkim signature to the email message headers.
@@ -137,16 +136,17 @@ class Transformer:
         # the call to msg.as_string() performs it's own bytes encoding...
         parsed_email["DKIM-Signature"] = sig[len("DKIM-Signature: "):].decode()
 
-    def set_list_unsubscribe(self, parsed_email: Message, uuid: str):
-        unsub = self.list_unsubscribe.replace("{{uuid}}", uuid)
+    def set_list_unsubscribe(self, parsed_email: Message, uuid: str, from_address_domain: str):
         if self.list_unsubscribe is not None:
+            unsub = self.list_unsubscribe.replace("{{uuid}}", uuid)
+            unsub = unsub.replace("{{from-domain}}", from_address_domain)
             parsed_email.add_header("List-Unsubscribe", unsub)
 
-    def set_message_id(self, parsed_email: Message, uuid: str, streamid: str) -> bool:
+    def set_message_id(self, parsed_email: Message, uuid: str, from_address_domain: str) -> bool:
         message_id = '<' + \
                      uuid + \
                      '@' + \
-                     self.return_path_domain + \
+                     from_address_domain + \
                      '>'
         parsed_email.add_header("Message-ID", message_id)
 

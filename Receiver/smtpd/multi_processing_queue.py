@@ -23,8 +23,8 @@ class MessageQueueWriter(object):
 
     @staticmethod
     def parse_smtp_headers(parsed_email: Message):
-        smtp_rcpt = parseaddr(parsed_email.get("To"))
-        smtp_from = parseaddr(parsed_email.get("From"))
+        smtp_rcpt = parseaddr(parsed_email.get("To"))[1]
+        smtp_from = parseaddr(parsed_email.get("From"))[1]
         ip = None
 
         if parsed_email.get("X-Priority", None) is None:
