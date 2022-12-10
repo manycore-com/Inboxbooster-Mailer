@@ -1,5 +1,6 @@
 package com.magicator.commandline
 
+import java.net.ConnectException
 import com.magicator.reliablequeue.ReliableQueue
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -44,7 +45,7 @@ class BackData {
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofByteArray(payload.encodeToByteArray()))
                     .build()
-
+                // ConnectException if target does not exist
                 val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
                 println(response.toString())
             }

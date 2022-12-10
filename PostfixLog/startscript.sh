@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cp /configs/mailname /etc/mailname
+postalias /etc/aliases
 service syslog-ng start
 service postfix start
 cat /etc/mailname

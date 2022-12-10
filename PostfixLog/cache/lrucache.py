@@ -23,4 +23,5 @@ class LRUCache:
             self.cache.popitem(last=False)
 
     def delete(self, key: str):
-        del self.cache[key]
+        if key in self.cache:
+            del self.cache[key]

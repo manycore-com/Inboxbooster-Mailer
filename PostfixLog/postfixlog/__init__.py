@@ -39,7 +39,7 @@ class PostfixLog:
                             "ip": cache.ip
                         }
                         self.reliable_queue.push(json.dumps(event).encode("utf-8"))
-                        print(str(event))
+                        logging.info(str(event))
                     elif cache.status in ["deferred", "bounced", "expired"]:
                         event = {
                             "event": "bounce",
@@ -50,6 +50,7 @@ class PostfixLog:
                             "reason": cache.status_message
                         }
                         self.reliable_queue.push(json.dumps(event).encode("utf-8"))
-                        print(str(event))
+                        logging.info(str(event))
                     else:
                         logging.warning("Unexpected status=" + str(cache.status) + " for " + str(filename))
+                self.lruCache.delete(filename)

@@ -47,6 +47,7 @@ backdata:
   log-directory: logs
 postfixlog:
   logfile: /var/log/mail.log
+  #logfile: test/test3.log
   locationfile: /tmp/postfixlog-location
   log-directory: logs
   reliable-queue:

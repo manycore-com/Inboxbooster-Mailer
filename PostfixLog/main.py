@@ -17,6 +17,8 @@ def get_arg_parse_object():
 if __name__ == "__main__":
     args = get_arg_parse_object()
 
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+
     with open(args.global_config_file, 'r') as file:
         global_config = yaml.safe_load(file)
 
@@ -49,6 +51,7 @@ if __name__ == "__main__":
     reliable_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
     pl = PostfixLog(reliable_queue)
 
+    logging.info("Staring PostfixLog")
     while True:
         if os.path.isfile(postfix_logfile):
             with open(postfix_logfile, "r") as f:
@@ -71,5 +74,7 @@ if __name__ == "__main__":
                 f.write("\n")
                 f.write(str(at_line))
                 f.write("\n")
+                logging.debug("Currently at_line=" + str(at_line))
+                location_lineno = at_line
             time.sleep(20)
 
