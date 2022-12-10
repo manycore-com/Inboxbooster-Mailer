@@ -64,11 +64,8 @@ if __name__ == "__main__":
     # logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'INFO'))
 
     if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
-        logins = customer_config["receiver"]["auth-logins"]
-        if "primary" in logins:
-            auth_db[logins["primary"]["username"].encode('utf-8')] = logins["primary"]["password"].encode('utf-8')
-        if "secondary" in logins:
-            auth_db[logins["secondary"]["username"].encode('utf-8')] = logins["secondary"]["password"].encode('utf-8')
+        for login in customer_config["receiver"]["auth-logins"]:
+            auth_db[login["username"].encode('utf-8')] = login["password"].encode('utf-8')
 
     cert_filename = args.tls_cert_filename
     key_filename = args.tls_key_filename

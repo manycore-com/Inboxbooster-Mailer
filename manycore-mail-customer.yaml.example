@@ -17,12 +17,10 @@ receiver:
     inet-interface: localhost
     inet-port: 8025
   auth-logins:
-    primary:
-      username: apa
+    - username: apa
       password: banan
-    # secondary is optional
-    secondary:
-      username: citron
+    #You can have more logins if you like
+    - username: citron
       password: dadel
   ignore-smtp-mail-from-rcpt-to:
     true
