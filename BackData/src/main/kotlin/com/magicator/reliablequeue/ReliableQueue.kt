@@ -3,6 +3,7 @@ package com.magicator.reliablequeue
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 
+
 class ReliableQueue {
 
     var jedisPool: JedisPool
@@ -49,6 +50,11 @@ class ReliableQueue {
 
         }
         return arr
+    }
+
+    @Synchronized
+    fun enqueue(data: ByteArray) {
+        jedis.rpush(this.queueNameByteArray, data)
     }
 
     fun stop() {
