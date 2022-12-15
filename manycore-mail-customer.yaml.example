@@ -14,6 +14,8 @@ transformer:
   dkim:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
+   - domain: bexample.com
+     dkim-private-key-file: ../../../cert/dkim-test-private.key
 receiver:
   bind:
     inet-interface: localhost
