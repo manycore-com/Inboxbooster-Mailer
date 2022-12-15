@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
+    event_queue_name = global_config["backdata"]["queue-name"]
 
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
 
@@ -61,7 +62,8 @@ if __name__ == "__main__":
         postfix_hostname,
         postfix_port,
         rq_redis_host,
-        rq_redis_port
+        rq_redis_port,
+        event_queue_name
     )
     logging.info("Running Transformer loop...")
     transformer.run()

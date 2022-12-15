@@ -1,6 +1,7 @@
 import logging
 import time
 import traceback
+import json
 from smtplib import SMTP as Client
 from typing import Optional
 from email.message import Message
@@ -31,9 +32,11 @@ class Transformer:
                  postfix_hostname: str,
                  postfix_port: int,
                  rq_redis_host: str,
-                 rq_redis_port: int):
+                 rq_redis_port: int,
+                 event_queue_name: str):
         self.prio_queue = ReliableQueue(prio_queue_name, rq_redis_host, rq_redis_port)
         self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
+        self.event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
         # No beacon injection in v1!
         self.beacon_url = beacon_url
         self.dkim_configuration = dkim_configuration
@@ -81,11 +84,7 @@ class Transformer:
                 high_priority = parsed_email["X-Priority"] == '0'
 
             if uuid is None:
-                self.error(parsed_email, "X-Uuid missing", uuid, streamid, "")
-                return
-
-            if streamid is None:
-                self.error(parsed_email, "X-Stream-Id missing", uuid, streamid, "")
+                self.error(parsed_email, "X-Uuid missing", uuid, streamid, traceback.format_exc())
                 return
 
             if "Message-ID" in parsed_email:
@@ -102,9 +101,8 @@ class Transformer:
 
             self.set_dkim(parsed_email, from_address_domain)
 
-            # TODO!! Cache connection!
             client = Client(self.postfix_hostname, self.postfix_port)
-            return_path = "return--" + uuid + "@" + from_address_domain
+            return_path = "bounce-" + uuid + "@" + from_address_domain
             message_as_bytes = parsed_email.as_bytes()
             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                 rcpt_to = addr_tuple[1]
@@ -117,7 +115,7 @@ class Transformer:
             logging.error("EXCEPTION " + str(type(ex)))
             logging.error(str(ex))
             logging.error(traceback.format_exc())
-            self.error(parsed_email, str(ex), uuid, streamid, traceback.format_exc())
+            self.error(parsed_email, str(type(ex)) + " " + str(ex), uuid, streamid, traceback.format_exc())
 
     def set_dkim(self, parsed_email, from_address_domain):
         msg_data = parsed_email.as_bytes()
@@ -152,7 +150,7 @@ class Transformer:
 
     def set_feedback_id(self, parsed_email: Message, streamid: str):
         from_email = parsed_email["From"]
-        feedback_id = streamid + \
+        feedback_id = str(streamid) + \
                       '.' + \
                       from_email
         parsed_email.add_header("Feedback-ID", feedback_id)
@@ -167,5 +165,18 @@ class Transformer:
 
     # Open question: should we add To, From, Subject in the error, if they are available?
     def error(self, parsed_email: Optional[Message], msg: str, uuid: Optional[str], streamid: Optional[str], stacktrace: str):
-        # TODO create error webhook
-        logging.error("error function called. " + str(msg))
+        try:
+            event = {
+                "event": "error",
+                "msg": msg,
+                "stack-trace": stacktrace,
+                "service": "transformer",
+                "timestamp": int(time.time()),
+                "uuid": uuid
+            }
+            self.event_queue.push(json.dumps(event).encode("utf-8"))
+            logging.info("Error function called. msg=" + str(msg))
+        except Exception as e:
+            logging.error("Failed to send error exception: " + str(e))
+
+
