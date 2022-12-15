@@ -41,15 +41,18 @@ class MessageQueueWriter(object):
     def run(self):
         safe_sleep(1)
         while True:
-            smtp_data = self.queue.get()
-            parsed_email = message_from_bytes(smtp_data)
-            smtp_rcpt, smtp_from, ip, priority = MessageQueueWriter.parse_smtp_headers(parsed_email)
-            if 0 == priority:
-                self.prio_queue.push(smtp_data)
-                logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name)
-            else:
-                self.default_queue.push(smtp_data)
-                logger.info("Enqueued email to RQ: " + self.default_queue._queue_name)
+            try:
+                smtp_data = self.queue.get()
+                parsed_email = message_from_bytes(smtp_data)
+                smtp_rcpt, smtp_from, ip, priority = MessageQueueWriter.parse_smtp_headers(parsed_email)
+                if 0 == priority:
+                    self.prio_queue.push(smtp_data)
+                    logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name)
+                else:
+                    self.default_queue.push(smtp_data)
+                    logger.info("Enqueued email to RQ: " + self.default_queue._queue_name)
+            except Exception as e:
+                logger.error("Error: " + str(e))
 
     @staticmethod
     def kill_worker():
