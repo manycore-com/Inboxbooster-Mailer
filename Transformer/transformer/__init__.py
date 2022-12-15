@@ -89,8 +89,8 @@ class Transformer:
                 return
 
             if "Message-ID" in parsed_email:
-                self.error(parsed_email, "Found a pre-existing Message-ID", uuid, streamid, "")
-                return
+                del parsed_email["Message-ID"]
+                logging.debug("Pre-existing Message-ID. Deleting it.")
 
             self.set_message_id(parsed_email, uuid, from_address_domain)
 
