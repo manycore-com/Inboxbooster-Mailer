@@ -22,6 +22,7 @@ def get_arg_parse_object(args):
     return parser.parse_args()
 
 
+# mechanism: PLAIN|..
 def authenticator_func(server, session, envelope, mechanism, auth_data):
     assert isinstance(auth_data, LoginPassword)
     username = auth_data.login

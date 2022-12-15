@@ -2,6 +2,7 @@ import logging
 import time
 import traceback
 import json
+from email.utils import formatdate
 from smtplib import SMTP as Client
 from typing import Optional
 from email.message import Message
@@ -91,6 +92,11 @@ class Transformer:
                 del parsed_email["Message-ID"]
                 logging.debug("Pre-existing Message-ID. Deleting it.")
 
+            if "Date" in parsed_email:
+                del parsed_email["Date"]
+
+            self.set_date(parsed_email)
+
             self.set_message_id(parsed_email, uuid, from_address_domain)
 
             self.set_feedback_id(parsed_email, streamid)
@@ -115,9 +121,12 @@ class Transformer:
             logging.error("EXCEPTION " + str(type(ex)))
             logging.error(str(ex))
             logging.error(traceback.format_exc())
-            self.error(parsed_email, str(type(ex)) + " " + str(ex), uuid, streamid, traceback.format_exc())
+            self.error(parsed_email, str(type(ex)) + str(ex), uuid, streamid, traceback.format_exc())
 
-    def set_dkim(self, parsed_email, from_address_domain):
+    def set_date(self, parsed_email: Message):
+        parsed_email["Date"] = formatdate()
+
+    def set_dkim(self, parsed_email: Message, from_address_domain):
         msg_data = parsed_email.as_bytes()
         dkim_selector = "mailer"
         # TODO add list-unsubscribe to headers to sign
