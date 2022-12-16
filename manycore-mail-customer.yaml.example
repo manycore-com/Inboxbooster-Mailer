@@ -22,9 +22,10 @@ transformer:
   # feedback-id will be campaign:customer:mailtype:{uuid}
   # https://support.google.com/mail/answer/6254652?hl=en
   feedback-id:
-    campaign-id: campaign
-    customer-id: customer
-    mail-type: mailtype
+    campaign-id: test-campaign
+    mail-type: test-mailtype
+    # Third value is uuid
+    sender-id: example-sender
 receiver:
   bind:
     inet-interface: localhost

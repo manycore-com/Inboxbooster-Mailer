@@ -37,12 +37,12 @@ if __name__ == "__main__":
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
     if "feedback-id" in customer_config["transformer"]:
         feedback_campaign = customer_config["transformer"]["feedback-id"].get("campaign-id")
-        feedback_customer = customer_config["transformer"]["feedback-id"].get("customer-id")
         feedback_mail_type = customer_config["transformer"]["feedback-id"].get("mail-type")
+        feedback_sender = customer_config["transformer"]["feedback-id"].get("sender-id")
     else:
         feedback_campaign = None
-        feedback_customer = None
         feedback_mail_type = None
+        feedback_sender = None
 
     postfix_hostname = customer_config["transformer"]["postfix"]["hostname"]
     postfix_port = int(customer_config["transformer"]["postfix"]["port"])
@@ -78,8 +78,8 @@ if __name__ == "__main__":
         rq_redis_port,
         event_queue_name,
         feedback_campaign,
-        feedback_customer,
         feedback_mail_type,
+        feedback_sender,
         x_mailer
     )
     logging.info("Running Transformer loop...")

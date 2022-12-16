@@ -36,8 +36,8 @@ class Transformer:
                  rq_redis_port: int,
                  event_queue_name: str,
                  feedback_campaign: str,
-                 feedback_customer: str,
                  feedback_mail_type: str,
+                 feedback_sender: str,
                  x_mailer: str):
         self.prio_queue = ReliableQueue(prio_queue_name, rq_redis_host, rq_redis_port)
         self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
@@ -49,8 +49,8 @@ class Transformer:
         self.postfix_hostname = postfix_hostname
         self.postfix_port = postfix_port
         self.feedback_campaign = feedback_campaign
-        self.feedback_customer = feedback_customer
         self.feedback_mail_type = feedback_mail_type
+        self.feedback_sender = feedback_sender
         self.x_mailer = x_mailer
 
     def run(self):
@@ -177,11 +177,11 @@ class Transformer:
         feedback_id = (
             str(self.feedback_campaign) +
             ":" +
-            str(self.feedback_customer) +
+            str(uuid) +
             ":" +
             str(self.feedback_mail_type) +
             ":" +
-            str(uuid)
+            str(self.feedback_sender)
         )
         parsed_email.add_header("Feedback-ID", feedback_id)
 
