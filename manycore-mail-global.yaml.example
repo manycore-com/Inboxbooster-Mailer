@@ -5,3 +5,6 @@ reliable-queue:
 backdata:
   queue-name:
     EVENT_QUEUE
+transformer:
+  x-mailer:
+    Manycore-Mail

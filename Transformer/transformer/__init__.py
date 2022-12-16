@@ -37,7 +37,8 @@ class Transformer:
                  event_queue_name: str,
                  feedback_campaign: str,
                  feedback_customer: str,
-                 feedback_mail_type: str):
+                 feedback_mail_type: str,
+                 x_mailer: str):
         self.prio_queue = ReliableQueue(prio_queue_name, rq_redis_host, rq_redis_port)
         self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
         self.event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
@@ -50,6 +51,7 @@ class Transformer:
         self.feedback_campaign = feedback_campaign
         self.feedback_customer = feedback_customer
         self.feedback_mail_type = feedback_mail_type
+        self.x_mailer = x_mailer
 
     def run(self):
         while True:
@@ -104,6 +106,8 @@ class Transformer:
 
             self.set_date(parsed_email)
 
+            self.set_x_mailer(parsed_email)
+
             self.set_message_id(parsed_email, uuid, return_path_domain)
 
             self.set_feedback_id(parsed_email, uuid)
@@ -129,6 +133,10 @@ class Transformer:
             logging.error(str(ex))
             logging.error(traceback.format_exc())
             self.error(parsed_email, str(type(ex)) + str(ex), uuid, streamid, traceback.format_exc())
+
+    def set_x_mailer(self, parsed_email: Message):
+        if self.x_mailer is not None:
+            parsed_email["X-Mailer"] = str(self.x_mailer)
 
     def set_date(self, parsed_email: Message):
         parsed_email["Date"] = formatdate()

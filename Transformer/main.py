@@ -29,6 +29,10 @@ if __name__ == "__main__":
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
     event_queue_name = global_config["backdata"]["queue-name"]
+    if "transformer" in global_config:
+        x_mailer = global_config["transformer"].get("x-mailer", "Manycore-Mail")
+    else:
+        x_mailer = "Manycore-Mail"
 
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
     if "feedback-id" in customer_config["transformer"]:
@@ -75,7 +79,8 @@ if __name__ == "__main__":
         event_queue_name,
         feedback_campaign,
         feedback_customer,
-        feedback_mail_type
+        feedback_mail_type,
+        x_mailer
     )
     logging.info("Running Transformer loop...")
     transformer.run()
