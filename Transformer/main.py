@@ -31,23 +31,32 @@ if __name__ == "__main__":
     event_queue_name = global_config["backdata"]["queue-name"]
 
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
+    if "feedback-id" in customer_config["transformer"]:
+        feedback_campaign = customer_config["transformer"]["feedback-id"].get("campaign-id")
+        feedback_customer = customer_config["transformer"]["feedback-id"].get("customer-id")
+        feedback_mail_type = customer_config["transformer"]["feedback-id"].get("mail-type")
+    else:
+        feedback_campaign = None
+        feedback_customer = None
+        feedback_mail_type = None
 
     postfix_hostname = customer_config["transformer"]["postfix"]["hostname"]
     postfix_port = int(customer_config["transformer"]["postfix"]["port"])
     rq_redis_host = customer_config["transformer"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["transformer"]["reliable-queue"]["redis"]["port"])
 
-    dkim_configuration = {}
-    for dkim in customer_config["transformer"]["dkim"]:
+    domain_configuration = {}
+    for domain_data in customer_config["transformer"]["domain-settings"]:
         # the dkim library uses regex on byte strings so everything
         # needs to be encoded from strings to bytes.
         # a PKCS#1 private key in base64-encoded text form
         # https://knowledge.ondmarc.redsift.com/en/articles/2141527-generating-1024-bits-dkim-public-and-private-keys-using-openssl-on-a-mac
-        logging.info("Reading dkim domain=" + dkim["domain"])
-        with open(dkim["dkim-private-key-file"]) as fh:
+        logging.info("Reading dkim. domain=" + domain_data["domain"])
+        with open(domain_data["dkim-private-key-file"]) as fh:
             dkim_private_key = fh.read()
-        dkim_configuration[dkim["domain"]] = {
-            "dkim_private_key": dkim_private_key
+        domain_configuration[domain_data["domain"]] = {
+            "dkim_private_key": dkim_private_key,
+            "return-path-domain": domain_data["return-path-domain"]
         }
 
     beacon_url = None  # args.beacon_url
@@ -57,13 +66,16 @@ if __name__ == "__main__":
         primary_queue,
         default_queue,
         beacon_url,
-        dkim_configuration,
+        domain_configuration,
         list_unsubscribe,
         postfix_hostname,
         postfix_port,
         rq_redis_host,
         rq_redis_port,
-        event_queue_name
+        event_queue_name,
+        feedback_campaign,
+        feedback_customer,
+        feedback_mail_type
     )
     logging.info("Running Transformer loop...")
     transformer.run()

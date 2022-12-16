@@ -28,22 +28,28 @@ class Transformer:
                  prio_queue_name: str,
                  default_queue_name: str,
                  beacon_url: Optional[str],
-                 dkim_configuration: dict,
+                 domain_configuration: dict,
                  list_unsubscribe: Optional[str],
                  postfix_hostname: str,
                  postfix_port: int,
                  rq_redis_host: str,
                  rq_redis_port: int,
-                 event_queue_name: str):
+                 event_queue_name: str,
+                 feedback_campaign: str,
+                 feedback_customer: str,
+                 feedback_mail_type: str):
         self.prio_queue = ReliableQueue(prio_queue_name, rq_redis_host, rq_redis_port)
         self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
         self.event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
         # No beacon injection in v1!
         self.beacon_url = beacon_url
-        self.dkim_configuration = dkim_configuration
+        self.domain_configuration = domain_configuration
         self.list_unsubscribe = list_unsubscribe
         self.postfix_hostname = postfix_hostname
         self.postfix_port = postfix_port
+        self.feedback_campaign = feedback_campaign
+        self.feedback_customer = feedback_customer
+        self.feedback_mail_type = feedback_mail_type
 
     def run(self):
         while True:
@@ -74,6 +80,7 @@ class Transformer:
             parsed_email = message_from_bytes(msg)  # type: Message
             from_address = parseaddr(parsed_email.get("From"))[1]
             from_address_domain = from_address.split('@')[1].lower()
+            return_path_domain = self.domain_configuration[from_address_domain]["return-path-domain"]
             print("Got message: from=" + from_address + " subject=" + parsed_email.get("Subject", ""))
 
             # Assume X-Uuid exists for now.
@@ -97,18 +104,18 @@ class Transformer:
 
             self.set_date(parsed_email)
 
-            self.set_message_id(parsed_email, uuid, from_address_domain)
+            self.set_message_id(parsed_email, uuid, return_path_domain)
 
-            self.set_feedback_id(parsed_email, streamid)
+            self.set_feedback_id(parsed_email, uuid)
 
-            self.set_list_unsubscribe(parsed_email, uuid, from_address_domain)
+            self.set_list_unsubscribe(parsed_email, uuid, return_path_domain)
 
             self.cleanup_headers(parsed_email)
 
             self.set_dkim(parsed_email, from_address_domain)
 
             client = Client(self.postfix_hostname, self.postfix_port)
-            return_path = "bounce-" + uuid + "@" + from_address_domain
+            return_path = "bounce-" + uuid + "@" + return_path_domain
             message_as_bytes = parsed_email.as_bytes()
             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                 rcpt_to = addr_tuple[1]
@@ -135,7 +142,7 @@ class Transformer:
             message=msg_data,
             selector=str(dkim_selector).encode(),
             domain=from_address_domain.encode(),
-            privkey=self.dkim_configuration[from_address_domain]["dkim_private_key"].encode(),
+            privkey=self.domain_configuration[from_address_domain]["dkim_private_key"].encode(),
             include_headers=headers,
         )
         # add the dkim signature to the email message headers.
@@ -157,11 +164,17 @@ class Transformer:
                      '>'
         parsed_email.add_header("Message-ID", message_id)
 
-    def set_feedback_id(self, parsed_email: Message, streamid: str):
-        from_email = parsed_email["From"]
-        feedback_id = str(streamid) + \
-                      '.' + \
-                      from_email
+    # v1: campaign:customer:mailtype:{uuid}
+    def set_feedback_id(self, parsed_email: Message, uuid: str):
+        feedback_id = (
+            str(self.feedback_campaign) +
+            ":" +
+            str(self.feedback_customer) +
+            ":" +
+            str(self.feedback_mail_type) +
+            ":" +
+            str(uuid)
+        )
         parsed_email.add_header("Feedback-ID", feedback_id)
 
     def cleanup_headers(self, parsed_email: Message):

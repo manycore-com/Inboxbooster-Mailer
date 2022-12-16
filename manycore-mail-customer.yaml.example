@@ -11,11 +11,20 @@ transformer:
       port: 6379
   log-directory: logs
   # Feel free to add multiple dkim configurations.
-  dkim:
+  domain-settings:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
+     return-path-domain: example.com
    - domain: bexample.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
+     return-path-domain: example.com
+  # This will change in next version, but for now:
+  # feedback-id will be campaign:customer:mailtype:{uuid}
+  # https://support.google.com/mail/answer/6254652?hl=en
+  feedback-id:
+    campaign-id: campaign
+    customer-id: customer
+    mail-type: mailtype
 receiver:
   bind:
     inet-interface: localhost
