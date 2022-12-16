@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword
 from smtpd import SmtpdHandler
+from reliable_queue import ReliableQueue
 import yaml
 
 auth_db = {}
@@ -46,6 +47,7 @@ if __name__ == "__main__":
 
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
+    event_queue_name = global_config["backdata"]["queue-name"]
 
     bind_address = customer_config["receiver"]["bind"]["inet-interface"]
     port = customer_config["receiver"]["bind"]["inet-port"]
@@ -74,10 +76,14 @@ if __name__ == "__main__":
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(cert_filename, key_filename)
 
+    prio_queue = ReliableQueue(primary_queue, rq_redis_host, rq_redis_port)
+    default_queue = ReliableQueue(default_queue, rq_redis_host, rq_redis_port)
+    event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
+
     logging.info("Starting Receiver on " + bind_address + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 
     controller = Controller(
-        SmtpdHandler(primary_queue, default_queue, rq_redis_host, rq_redis_port),
+        SmtpdHandler(prio_queue, default_queue, event_queue),
         hostname=bind_address,
         port=port,
         authenticator=authenticator_func,  # i.e., the name of your authenticator function

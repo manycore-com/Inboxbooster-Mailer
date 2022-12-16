@@ -1,3 +1,6 @@
+import time
+import traceback
+import json
 import multiprocessing
 from email.message import Message
 from email.utils import parseaddr
@@ -10,10 +13,11 @@ from .utils import safe_sleep
 
 class MessageQueueWriter(object):
 
-    def __init__(self, prio_queue: str, default_queue: str, rq_redis_host: str, rq_redis_port: int):
+    def __init__(self, prio_queue: ReliableQueue, default_queue: ReliableQueue, event_queue: ReliableQueue):
         self.queue = multiprocessing.Queue()  # type: multiprocessing.Queue
-        self.prio_queue = ReliableQueue(prio_queue, rq_redis_host, rq_redis_port)
-        self.default_queue = ReliableQueue(default_queue, rq_redis_host, rq_redis_port)
+        self.prio_queue = prio_queue
+        self.default_queue = default_queue
+        self.event_queue = event_queue
         self.process = multiprocessing.Process(target=MessageQueueWriter.run, args=(self,))  # type: multiprocessing.Process
         self.process.start()
 
@@ -52,7 +56,19 @@ class MessageQueueWriter(object):
                     self.default_queue.push(smtp_data)
                     logger.info("Enqueued email to RQ: " + self.default_queue._queue_name)
             except Exception as e:
-                logger.error("Error: " + str(e))
+                logger.error("Error: " + str(type(e)) + ":" + str(e))
+                try:
+                    event = {
+                        "event": "error",
+                        "msg": str(type(e)) + ":" + str(e),
+                        "stack-trace": traceback.format_exc(),
+                        "service": "receiver",
+                        "timestamp": int(time.time()),
+                        "uuid": None
+                    }
+                    self.event_queue.push(json.dumps(event).encode("utf-8"))
+                except Exception as e:
+                    logger.error("Error sending error event: " + str(e))
 
     @staticmethod
     def kill_worker():

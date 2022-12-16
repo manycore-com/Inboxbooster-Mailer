@@ -132,7 +132,7 @@ class Transformer:
             logging.error("EXCEPTION " + str(type(ex)))
             logging.error(str(ex))
             logging.error(traceback.format_exc())
-            self.error(parsed_email, str(type(ex)) + str(ex), uuid, streamid, traceback.format_exc())
+            self.error(parsed_email, str(type(ex)) + ":" + str(ex), uuid, streamid, traceback.format_exc())
 
     def set_x_mailer(self, parsed_email: Message):
         if self.x_mailer is not None:

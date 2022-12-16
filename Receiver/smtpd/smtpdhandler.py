@@ -3,6 +3,7 @@ from aiosmtpd.smtp import Envelope, Session, SMTP
 from aiosmtpd.testing.statuscodes import SMTP_STATUS_CODES as S
 import logging as logger
 from .multi_processing_queue import MessageQueueWriter
+from reliable_queue import ReliableQueue
 
 # Var
 DEBUG = False
@@ -17,8 +18,8 @@ class SmtpdHandler(object):
     Q = Queue()
     stop_queue = Queue()
 
-    def __init__(self, prio_queue: str, default_queue: str, rq_redis_host: str, rq_redis_port: int):
-        self.mqw = MessageQueueWriter(prio_queue, default_queue, rq_redis_host, rq_redis_port)
+    def __init__(self, prio_queue: ReliableQueue, default_queue: ReliableQueue, event_queue: ReliableQueue):
+        self.mqw = MessageQueueWriter(prio_queue, default_queue, event_queue)
 
     def addMail(self, envelope: Envelope):
         self.mqw.enqueue(envelope.original_content)
