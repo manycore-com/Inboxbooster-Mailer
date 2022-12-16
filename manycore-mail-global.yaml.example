@@ -7,4 +7,4 @@ backdata:
     EVENT_QUEUE
 transformer:
   x-mailer:
-    Manycore-Mail
+    Inboxbooster-Mailer
