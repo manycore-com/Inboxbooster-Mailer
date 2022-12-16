@@ -53,7 +53,8 @@ class BackData {
                         .build()
                     // ConnectException if target does not exist
                     val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-                    println(response.toString())
+                    Logger.info(response.toString())
+                    Logger.info(payload)
                 }
             } catch (e: Exception) {
 
