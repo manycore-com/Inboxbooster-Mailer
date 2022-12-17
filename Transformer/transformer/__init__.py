@@ -129,9 +129,7 @@ class Transformer:
             client.close()
 
         except Exception as ex:
-            logging.error("EXCEPTION " + str(type(ex)))
-            logging.error(str(ex))
-            logging.error(traceback.format_exc())
+            logging.error(str(ex), exc_info=True, stack_info=True)
             self.error(parsed_email, str(type(ex)) + ":" + str(ex), uuid, streamid, traceback.format_exc())
 
     def set_x_mailer(self, parsed_email: Message):
@@ -207,6 +205,7 @@ class Transformer:
             self.event_queue.push(json.dumps(event).encode("utf-8"))
             logging.info("Error function called. msg=" + str(msg))
         except Exception as e:
-            logging.error("Failed to send error exception: " + str(e))
+            logging.error("Failed to send error exception")
+            logging.error(e, exc_info=True, stack_info=True)
 
 
