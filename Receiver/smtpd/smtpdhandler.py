@@ -34,7 +34,6 @@ class SmtpdHandler(object):
             self.addMail(envelope)
             return '250 Message accepted for delivery'
         except Exception as err:
-            logger.error("unknown exception")
-            logger.error(err, exc_info=True)
+            logger.error(err, exc_info=True, stack_info=True)
             return "400 Unknown Error. Please retry later. Support is already notified."
 

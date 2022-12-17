@@ -56,7 +56,7 @@ class MessageQueueWriter(object):
                     self.default_queue.push(smtp_data)
                     logger.info("Enqueued email to RQ: " + self.default_queue._queue_name)
             except Exception as e:
-                logger.error("Error: " + str(type(e)) + ":" + str(e))
+                logger.error("Error. Will send error event.", exc_info=True, stack_info=True)
                 try:
                     event = {
                         "event": "error",
@@ -68,7 +68,8 @@ class MessageQueueWriter(object):
                     }
                     self.event_queue.push(json.dumps(event).encode("utf-8"))
                 except Exception as e:
-                    logger.error("Error sending error event: " + str(e))
+                    logger.error("Error sending error event")
+                    logger.error(e, exc_info=True, stack_info=True)
 
     @staticmethod
     def kill_worker():
