@@ -1,6 +1,8 @@
+import os
 import argparse
 import sys
 import yaml
+from logging.handlers import RotatingFileHandler
 from transformer import Transformer
 import logging
 
@@ -25,6 +27,18 @@ if __name__ == "__main__":
 
     with open(args.customer_config_file, 'r') as file:
         customer_config = yaml.safe_load(file)
+
+    log_directory = customer_config["receiver"]["log-directory"]
+    if not log_directory.endswith("/"):
+        log_directory = log_directory + "/"
+
+    handler = RotatingFileHandler(log_directory + "transformer.log", maxBytes=1000000, backupCount=10)
+    formatter = logging.Formatter('%(asctime)s - %(process)6d - %(levelname)-8s - %(message)s')
+    handler.setFormatter(formatter)
+    logger = logging.getLogger()
+    #logger.handlers.clear()
+    logger.addHandler(handler)
+    logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'INFO'))
 
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
