@@ -1,6 +1,6 @@
 package com.magicator.commandline
 
-import java.net.ConnectException
+import com.magicator.exceptions.EventPostError
 import org.pmw.tinylog.Logger
 import com.magicator.reliablequeue.ReliableQueue
 import kotlinx.cli.ArgParser
@@ -43,7 +43,7 @@ class BackData {
                     "[" + list.joinToString(",") + "]"
                 }
 
-                Logger.debug("Posting " + payload)
+                Logger.info("Posting " + payload)
                 if (null != payload) {
                     val client = HttpClient.newHttpClient()
                     val request: HttpRequest = HttpRequest.newBuilder()
@@ -54,12 +54,15 @@ class BackData {
                     // ConnectException if target does not exist
                     val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
                     Logger.info(response.toString())
-                    Logger.info(payload)
+                    if (400 <= response.statusCode()) {
+                        throw EventPostError("Failed to post events. status=" + response.statusCode(), response.statusCode())
+                    }
                 }
             } catch (e: Exception) {
 
+                Logger.error(e)
                 val oldestAllowedTs = System.currentTimeMillis() / 1000 - this.maxAgeToRetry
-                var anyEnqueued: Boolean = false
+                var nbrEnqueued = 0
                 events?.forEach() { eventBinary ->
                     try {
                         val json = JSONObject(String(eventBinary, Charsets.UTF_8))
@@ -67,7 +70,7 @@ class BackData {
                         if (ts > oldestAllowedTs) {
                             Logger.info("re-enqueueing " + String(eventBinary, Charsets.UTF_8))
                             reliableQueue.enqueue(eventBinary)
-                            anyEnqueued = true
+                            nbrEnqueued++
                         } else {
                             Logger.info("Dropping old event: " + String(eventBinary, Charsets.UTF_8))
                         }
@@ -76,9 +79,12 @@ class BackData {
                     }
                 }
 
-                // If any anyEnqueued then sleep a bit
-                if (anyEnqueued) {
-                    Logger.info("We had an error, sleep for 60s")
+                if (nbrEnqueued > 0) {
+                    if (e is EventPostError) {
+                        Logger.info("We had an exception with statusCode=" + e.statusCode + ", sleep for 60s. Enqueued $nbrEnqueued events for retry.")
+                    } else {
+                        Logger.info("We had an unexpected exception error=$e, sleep for 60s. Enqueued $nbrEnqueued events for retry.")
+                    }
                     Thread.sleep(60L * 1000L)
                 }
 
