@@ -1,15 +1,15 @@
 from multiprocessing import Queue
 from aiosmtpd.smtp import Envelope, Session, SMTP
 from aiosmtpd.testing.statuscodes import SMTP_STATUS_CODES as S
-import logging as logger
+import logging
 from .multi_processing_queue import MessageQueueWriter
 from reliable_queue import ReliableQueue
 
 # Var
 DEBUG = False
 
-log_aiosmtpd = logger.getLogger('mail.log')
-log_aiosmtpd.setLevel(logger.WARNING)
+log_aiosmtpd = logging.getLogger('mail.log')
+log_aiosmtpd.setLevel(logging.getLogger().level)
 
 
 # bind on all IP for now
@@ -34,6 +34,6 @@ class SmtpdHandler(object):
             self.addMail(envelope)
             return '250 Message accepted for delivery'
         except Exception as err:
-            logger.error(err, exc_info=True, stack_info=True)
+            logging.error(str(err), exc_info=True, stack_info=True)
             return "400 Unknown Error. Please retry later. Support is already notified."
 

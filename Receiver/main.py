@@ -37,7 +37,8 @@ def authenticator_func(server, session, envelope, mechanism, auth_data):
 if __name__ == "__main__":
     args = get_arg_parse_object(sys.argv[1:])
 
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+    logging.getLogger().setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
 
     with open(args.global_config_file, 'r') as file:
         global_config = yaml.safe_load(file)  # dict
@@ -55,19 +56,10 @@ if __name__ == "__main__":
     rq_redis_host = customer_config["receiver"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["receiver"]["reliable-queue"]["redis"]["port"])
     log_directory = customer_config["receiver"]["log-directory"]
-    if not log_directory.endswith("/"):
-        log_directory = log_directory + "/"
-
-    handler = RotatingFileHandler(log_directory + "receiver.log", maxBytes=1000000, backupCount=10)
-    formatter = logging.Formatter('%(asctime)s - %(process)6d - %(levelname)-8s - %(message)s')
-    handler.setFormatter(formatter)
-    logger = logging.getLogger()
-    #logger.handlers.clear()
-    logger.addHandler(handler)
-    logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'INFO'))
 
     if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
         for login in customer_config["receiver"]["auth-logins"]:
+            logging.info("Add AUTH credentials for user " + login["username"])
             auth_db[login["username"].encode('utf-8')] = login["password"].encode('utf-8')
 
     cert_filename = args.tls_cert_filename
