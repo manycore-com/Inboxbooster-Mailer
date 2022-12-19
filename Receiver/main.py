@@ -16,8 +16,8 @@ auth_db = {}
 
 def get_arg_parse_object(args):
     parser = argparse.ArgumentParser(description="Receiver")
-    parser.add_argument('--global-config-file', type=str, help="Based on manycore-mail-global.yaml.example", required=True)
-    parser.add_argument('--customer-config-file', type=str, help="Based on manycore-mail-customer.yaml.example", required=True)
+    parser.add_argument('--global-config-file', type=str, help="Based on inboxbooster-mailer-global.yaml.example", required=True)
+    parser.add_argument('--customer-config-file', type=str, help="Based on inboxbooster-mailer-mail-customer.yaml.example", required=True)
     parser.add_argument('--tls-cert-filename', type=str, help='Cert file for TLS.', required=True)
     parser.add_argument('--tls-key-filename', type=str, help='Key file for TLS.', required=True)
     return parser.parse_args()

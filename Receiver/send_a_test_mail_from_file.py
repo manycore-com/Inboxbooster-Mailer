@@ -1,15 +1,6 @@
 import time
 from smtplib import SMTP as Client
-
 from smtpd import MessageQueueWriter
-
-"""
-export MANYCORE_MAIL_RECEIVER_HOSTNAME=127.0.0.1
-export MANYCORE_MAIL_RECEIVER_PORT=8025
-export MANYCORE_MAIL_RECEIVER_LOGIN_USER1=apa
-export MANYCORE_MAIL_RECEIVER_LOGIN_PASSWORD1=banan
-python main.py
-"""
 
 client = Client("127.0.0.1", 8025)
 client.login("apa", "banan")
