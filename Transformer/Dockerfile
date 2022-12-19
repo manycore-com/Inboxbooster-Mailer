@@ -16,6 +16,6 @@ RUN mkdir -p /app/logs
 COPY . .
 
 CMD [ "python3", "main.py", \
-  "--global-config-file=/configs/manycore-mail-global.yaml", \
-  "--customer-config-file=/configs/manycore-mail-customer.yaml" ]
+  "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \
+  "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml" ]
 

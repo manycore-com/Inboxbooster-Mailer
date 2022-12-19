@@ -9,8 +9,8 @@ import logging
 
 def get_arg_parse_object(args):
     parser = argparse.ArgumentParser(description="Receiver")
-    parser.add_argument('--global-config-file', type=str, help="Based on manycore-mail-global.yaml.", required=True)
-    parser.add_argument('--customer-config-file', type=str, help="Based on manycore-mail-customer.yaml.", required=True)
+    parser.add_argument('--global-config-file', type=str, help="Based on inboxbooster-mailer-global.yaml.", required=True)
+    parser.add_argument('--customer-config-file', type=str, help="Based on inboxbooster-mailer-customer.yaml.", required=True)
     # v1.5 parser.add_argument('--beacon-url', type=str, help='If we want to inject beacons. ex: https://example.com/1-1234-234', required=False)
     return parser.parse_args()
 
@@ -44,9 +44,9 @@ if __name__ == "__main__":
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
     event_queue_name = global_config["backdata"]["queue-name"]
     if "transformer" in global_config:
-        x_mailer = global_config["transformer"].get("x-mailer", "Manycore-Mail")
+        x_mailer = global_config["transformer"].get("x-mailer", "Inboxbooster-Mailer")
     else:
-        x_mailer = "Manycore-Mail"
+        x_mailer = "Inboxbooster-Mailer"
 
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
     if "feedback-id" in customer_config["transformer"]:

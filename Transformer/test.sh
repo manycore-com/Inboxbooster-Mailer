@@ -2,6 +2,6 @@
 
 python \
   main.py \
-  --global-config-file=../manycore-mail-global.yaml.example \
-  --customer-config-file=../manycore-mail-customer.yaml.example
+  --global-config-file=../inboxbooster-mailer-global.yaml.example \
+  --customer-config-file=../inboxbooster-mailer-customer.yaml.example
 
