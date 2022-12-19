@@ -43,8 +43,8 @@ class BackData {
                     "[" + list.joinToString(",") + "]"
                 }
 
-                Logger.info("Posting " + payload)
                 if (null != payload) {
+                    Logger.info("Posting " + events?.size + " events: $payload")
                     val client = HttpClient.newHttpClient()
                     val request: HttpRequest = HttpRequest.newBuilder()
                         .uri(URI.create(this.postUrl))
@@ -53,7 +53,7 @@ class BackData {
                         .build()
                     // ConnectException if target does not exist
                     val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-                    Logger.info(response.toString())
+                    Logger.info("Response: $response")
                     if (400 <= response.statusCode()) {
                         throw EventPostError("Failed to post events. status=" + response.statusCode(), response.statusCode())
                     }
