@@ -78,12 +78,13 @@ class Transformer:
         parsed_email = None
         uuid = None
         streamid = None
+        client = None
         try:
             parsed_email = message_from_bytes(msg)  # type: Message
             from_address = parseaddr(parsed_email.get("From"))[1]
             from_address_domain = from_address.split('@')[1].lower()
             return_path_domain = self.domain_configuration[from_address_domain]["return-path-domain"]
-            print("Got message: from=" + from_address + " subject=" + parsed_email.get("Subject", ""))
+            logging.info("message details: from=" + str(from_address) + " subject=" + parsed_email.get("Subject", ""))
 
             # Assume X-Uuid exists for now.
             uuid = parsed_email.get("X-Uuid")
@@ -124,13 +125,17 @@ class Transformer:
             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                 rcpt_to = addr_tuple[1]
                 client.sendmail(return_path, [rcpt_to], message_as_bytes)
-                logging.info("Sent message to " + rcpt_to)
-                # TODO add webhook
-            client.close()
+                logging.info("Sent message to=" + rcpt_to + " from=" + str(from_address) + " uuid=" + str(uuid))
 
         except Exception as ex:
             logging.error(str(ex), exc_info=True, stack_info=True)
             self.error(parsed_email, str(type(ex)) + ":" + str(ex), uuid, streamid, traceback.format_exc())
+        finally:
+            if client is not None:
+                try:
+                    client.close()
+                except Exception as ex:
+                    logging.error(ex, exc_info=True, stack_info=True)
 
     def set_x_mailer(self, parsed_email: Message):
         if self.x_mailer is not None:

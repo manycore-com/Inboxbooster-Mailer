@@ -6,7 +6,7 @@ import time
 import logging
 from logging.handlers import RotatingFileHandler
 from aiosmtpd.controller import Controller
-from aiosmtpd.smtp import AuthResult, LoginPassword
+from aiosmtpd.smtp import AuthResult, LoginPassword, SMTP, Session, Envelope
 from smtpd import SmtpdHandler
 from reliable_queue import ReliableQueue
 import yaml
@@ -24,13 +24,16 @@ def get_arg_parse_object(args):
 
 
 # mechanism: PLAIN|..
-def authenticator_func(server, session, envelope, mechanism, auth_data):
+def authenticator_func(server: SMTP, session: Session, envelope: Envelope, mechanism, auth_data):
     assert isinstance(auth_data, LoginPassword)
     username = auth_data.login
     password = auth_data.password
+
     if auth_db.get(username) == password:
+        logging.info("Success authenticating " + str(username) + " peer=" + str(session.peer))
         return AuthResult(success=True)
     else:
+        logging.info("Failure authenticating " + str(username) + " peer=" + str(session.peer))
         return AuthResult(success=False, handled=False)
 
 
