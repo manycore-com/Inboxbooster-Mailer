@@ -8,5 +8,5 @@ cat /etc/mailname
 sleep 2
 ps -ef |grep postfix
 python3 main.py \
-  --global-config-file=/configs/manycore-mail-global.yaml \
-  --customer-config-file=/configs/manycore-mail-customer.yaml
+  --global-config-file=/configs/inboxbooster-mailer-global.yaml \
+  --customer-config-file=/configs/inboxbooster-mailer-customer.yaml

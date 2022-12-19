@@ -9,8 +9,8 @@ from postfixlog import PostfixLog
 
 def get_arg_parse_object():
     parser = argparse.ArgumentParser(description="PostfixLog")
-    parser.add_argument('--global-config-file', type=str, help="Based on manycore-mail-global.yaml.", required=True)
-    parser.add_argument('--customer-config-file', type=str, help="Based on manycore-mail-customer.yaml.", required=True)
+    parser.add_argument('--global-config-file', type=str, help="Based on inboxbooster-mailer-global.yaml.", required=True)
+    parser.add_argument('--customer-config-file', type=str, help="Based on inboxbooster-mailer-customer.yaml.", required=True)
     return parser.parse_args()
 
 
