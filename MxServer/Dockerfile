@@ -1,6 +1,8 @@
 # https://docs.docker.com/language/python/build-images/
 
 # docker build -t inboxbooster/mxserver:latest .
+# docker push inboxbooster/mxserver
+
 
 FROM python:3.10-bullseye
 
@@ -14,5 +16,5 @@ RUN mkdir -p /app/logs
 COPY . .
 
 CMD [ "python3", "main.py", \
-  "--global-config-file=/configs/manycore-mail-global.yaml", \
-  "--customer-config-file=/configs/manycore-mail-customer.yaml"]
+  "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \
+  "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"]

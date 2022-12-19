@@ -13,7 +13,7 @@ class BackDataTest {
     fun test() {
         Logger.getConfiguration().level(Level.DEBUG).activate()
         val yaml = Yaml()
-        val globalConf: Map<String, Any> = yaml.load(File("../manycore-mail-global.yaml.example").inputStream())
+        val globalConf: Map<String, Any> = yaml.load(File("../inboxbooster-mailer-global.yaml.example").inputStream())
         val queueName = ((globalConf["backdata"]) as LinkedHashMap<String,String>)["queue-name"]
         println(queueName)
     }
@@ -27,8 +27,8 @@ class BackDataTest {
         rq.jedis.rpush(rq.queueNameByteArray, ("{\"event\": \"delivered\", \"uuid\": \"201712140215549185A2A16DB\", \"timestamp\": " + ts + ", \"ip\": null}").encodeToByteArray())
 
         val args = listOf<String>(
-            "--global-config-file", "../manycore-mail-global.yaml.example",
-            "--customer-config-file", "../manycore-mail-customer.yaml.example",
+            "--global-config-file", "../inboxbooster-mailer-global.yaml.example",
+            "--customer-config-file", "../inboxbooster-mailer-customer.yaml.example",
         )
 
         BackData.main(args.toTypedArray())
