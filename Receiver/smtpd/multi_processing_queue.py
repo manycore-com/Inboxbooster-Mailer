@@ -3,7 +3,7 @@ import traceback
 import json
 import multiprocessing
 from email.message import Message
-from email.utils import parseaddr
+from email.utils import parseaddr, getaddresses
 from email import message_from_bytes
 import logging as logger
 from reliable_queue import ReliableQueue
@@ -27,8 +27,16 @@ class MessageQueueWriter(object):
 
     @staticmethod
     def parse_smtp_headers(parsed_email: Message):
-        smtp_rcpt = parseaddr(parsed_email.get("To"))[1]
-        smtp_from = parseaddr(parsed_email.get("From"))[1]
+        email_to = []
+        to_data = parsed_email.get_all("To")
+        if to_data is not None:
+            for tuple in getaddresses(to_data):
+                email_to.append(tuple[1])
+        email_from = []
+        from_data = parsed_email.get_all("From")
+        if from_data is not None:
+            for tuple in getaddresses(from_data):
+                email_from.append(tuple[1])
         ip = None
 
         if parsed_email.get("X-Priority", None) is None:
@@ -40,7 +48,7 @@ class MessageQueueWriter(object):
                     priority = 1
             except Exception as ex:
                 priority = 1
-        return smtp_rcpt, smtp_from, ip, priority
+        return email_to, email_from, ip, priority, parsed_email.get("Subject", "")
 
     def run(self):
         safe_sleep(1)
@@ -48,13 +56,13 @@ class MessageQueueWriter(object):
             try:
                 smtp_data = self.queue.get()
                 parsed_email = message_from_bytes(smtp_data)
-                smtp_rcpt, smtp_from, ip, priority = MessageQueueWriter.parse_smtp_headers(parsed_email)
+                email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
                 if 0 == priority:
                     self.prio_queue.push(smtp_data)
-                    logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name)
+                    logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " subject=" + subject)
                 else:
                     self.default_queue.push(smtp_data)
-                    logger.info("Enqueued email to RQ: " + self.default_queue._queue_name)
+                    logger.info("Enqueued email to RQ: " + self.default_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " subject=" + subject)
             except Exception as e:
                 logger.error("Error. Will send error event.", exc_info=True, stack_info=True)
                 try:
@@ -67,12 +75,14 @@ class MessageQueueWriter(object):
                         "uuid": None
                     }
                     self.event_queue.push(json.dumps(event).encode("utf-8"))
+                    logger.error("Error event being sent: " + json.dumps(event))
                 except Exception as e:
                     logger.error("Error sending error event")
                     logger.error(e, exc_info=True, stack_info=True)
 
     @staticmethod
     def kill_worker():
+        logger.info("MessageQueueWriter.kill_worker() called")
         if MessageQueueWriter.singleton_ is None:
             return
         MessageQueueWriter.get_instance().process.terminate()
