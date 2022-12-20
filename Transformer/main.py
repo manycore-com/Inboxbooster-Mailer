@@ -38,7 +38,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     #logger.handlers.clear()
     logger.addHandler(handler)
-    logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'INFO'))
+    logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
 
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]

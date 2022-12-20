@@ -84,19 +84,27 @@ class Transformer:
             from_address = parseaddr(parsed_email.get("From"))[1]
             from_address_domain = from_address.split('@')[1].lower()
             return_path_domain = self.domain_configuration[from_address_domain]["return-path-domain"]
-            logging.info("message details: from=" + str(from_address) + " subject=" + parsed_email.get("Subject", ""))
+            email_to = []
+            to_data = parsed_email.get_all("To")
+            if to_data is not None:
+                for tup in getaddresses(to_data):
+                    email_to.append(tup[1])
 
             # Assume X-Uuid exists for now.
             uuid = parsed_email.get("X-Uuid")
             streamid = parsed_email.get("X-Stream-Id")
 
-            high_priority = False
-            if "X-Priority" in parsed_email:
-                high_priority = parsed_email["X-Priority"] == '0'
+            logging.info("message details: from=" + str(from_address) + " to=" + str(email_to) +
+                         " uuid=" + str(uuid) +
+                         " streamid=" + str(streamid) +
+                         " subject=" + parsed_email.get("Subject", ""))
 
             if uuid is None:
                 self.error(parsed_email, "X-Uuid missing", uuid, streamid, traceback.format_exc())
                 return
+
+            if "List-Unsubscribe" in parsed_email:
+                logging.warning("Email header List-Unsubscribe already exists!")
 
             if "Message-ID" in parsed_email:
                 del parsed_email["Message-ID"]
@@ -140,6 +148,7 @@ class Transformer:
     def set_x_mailer(self, parsed_email: Message):
         if self.x_mailer is not None:
             parsed_email["X-Mailer"] = str(self.x_mailer)
+            logging.debug("Setting email header X-Mailer=" + str(parsed_email["X-Mailer"]))
 
     def set_date(self, parsed_email: Message):
         parsed_email["Date"] = formatdate()
@@ -160,12 +169,14 @@ class Transformer:
         # decode the signature back to string_type because later on
         # the call to msg.as_string() performs it's own bytes encoding...
         parsed_email["DKIM-Signature"] = sig[len("DKIM-Signature: "):].decode()
+        logging.debug("Setting email header DKIM-Signature=" + str(parsed_email["DKIM-Signature"]))
 
     def set_list_unsubscribe(self, parsed_email: Message, uuid: str, from_address_domain: str):
         if self.list_unsubscribe is not None:
             unsub = self.list_unsubscribe.replace("{{uuid}}", uuid)
             unsub = unsub.replace("{{from-domain}}", from_address_domain)
             parsed_email.add_header("List-Unsubscribe", unsub)
+            logging.debug("Setting email header List-Unsubscribe=" + str(parsed_email["List-Unsubscribe"]))
 
     def set_message_id(self, parsed_email: Message, uuid: str, from_address_domain: str) -> bool:
         message_id = '<' + \
@@ -174,6 +185,7 @@ class Transformer:
                      from_address_domain + \
                      '>'
         parsed_email.add_header("Message-ID", message_id)
+        logging.debug("Setting email header Message-ID=" + str(parsed_email["Message-ID"]))
 
     # v1: campaign:customer:mailtype:{uuid}
     def set_feedback_id(self, parsed_email: Message, uuid: str):
@@ -187,14 +199,21 @@ class Transformer:
             str(self.feedback_sender)
         )
         parsed_email.add_header("Feedback-ID", feedback_id)
+        logging.debug("Setting email header Feedback-Id=" + str(parsed_email["Feedback-ID"]))
 
     def cleanup_headers(self, parsed_email: Message):
+        cleaned_headers = []
         if "X-Uuid" in parsed_email:
+            cleaned_headers.append("X-Uuid")
             del parsed_email["X-Uuid"]
         if "X-Stream-Id" in parsed_email:
+            cleaned_headers.append("X-Stream-Id")
             del parsed_email["X-Stream-Id"]
         if "X-Priority" in parsed_email:
+            cleaned_headers.append("X-Priority")
             del parsed_email["X-Priority"]
+        if 0 < len(cleaned_headers):
+            logging.debug("Removed email headers: " + str(cleaned_headers))
 
     # Open question: should we add To, From, Subject in the error, if they are available?
     def error(self, parsed_email: Optional[Message], msg: str, uuid: Optional[str], streamid: Optional[str], stacktrace: str):
