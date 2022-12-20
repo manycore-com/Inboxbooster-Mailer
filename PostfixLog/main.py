@@ -51,7 +51,7 @@ if __name__ == "__main__":
     reliable_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
     pl = PostfixLog(reliable_queue)
 
-    logging.info("Staring PostfixLog")
+    logging.info("Starting PostfixLog")
     while True:
         if os.path.isfile(postfix_logfile):
             with open(postfix_logfile, "r") as f:

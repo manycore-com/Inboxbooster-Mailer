@@ -20,6 +20,7 @@ RUN mkdir -p /app/logs
 COPY requirements.txt requirements.txt
 
 COPY startscript.sh .
+RUN chmod 755 /app/startscript.sh
 
 RUN pip3 install -r requirements.txt
 

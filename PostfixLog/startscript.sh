@@ -7,6 +7,14 @@ service postfix start
 cat /etc/mailname
 sleep 2
 ps -ef |grep postfix
+
+until [ -f /var/log/mail.log ]
+do
+     sleep 1
+done
+tail -F /var/log/mail.log &
+
 python3 main.py \
   --global-config-file=/configs/inboxbooster-mailer-global.yaml \
   --customer-config-file=/configs/inboxbooster-mailer-customer.yaml
+
