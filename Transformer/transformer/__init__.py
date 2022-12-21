@@ -84,6 +84,7 @@ class Transformer:
             from_address = parseaddr(parsed_email.get("From"))[1]
             from_address_domain = from_address.split('@')[1].lower()
             return_path_domain = self.domain_configuration[from_address_domain]["return-path-domain"]
+            selector = self.domain_configuration[from_address_domain]["selector"]
             email_to = []
             to_data = parsed_email.get_all("To")
             if to_data is not None:
@@ -125,7 +126,7 @@ class Transformer:
 
             self.cleanup_headers(parsed_email)
 
-            self.set_dkim(parsed_email, from_address_domain)
+            self.set_dkim(parsed_email, from_address_domain, selector)
 
             client = Client(self.postfix_hostname, self.postfix_port)
             return_path = "bounce-" + uuid + "@" + return_path_domain
@@ -153,14 +154,13 @@ class Transformer:
     def set_date(self, parsed_email: Message):
         parsed_email["Date"] = formatdate()
 
-    def set_dkim(self, parsed_email: Message, from_address_domain):
+    def set_dkim(self, parsed_email: Message, from_address_domain: str, selector: str):
         msg_data = parsed_email.as_bytes()
-        dkim_selector = "mailer"
         # TODO add list-unsubscribe to headers to sign
         headers = [b"To", b"From", b"Subject"]
         sig = dkim.sign(
             message=msg_data,
-            selector=str(dkim_selector).encode(),
+            selector=str(selector).encode(),
             domain=from_address_domain.encode(),
             privkey=self.domain_configuration[from_address_domain]["dkim_private_key"].encode(),
             include_headers=headers,

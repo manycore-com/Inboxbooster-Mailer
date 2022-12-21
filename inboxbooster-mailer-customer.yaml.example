@@ -15,9 +15,11 @@ transformer:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
      return-path-domain: example.com
+     selector: mailer
    - domain: bexample.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
      return-path-domain: example.com
+     selector: mailer
   # This will change in next version, but for now:
   # feedback-id will be campaign:customer:mailtype:{uuid}
   # https://support.google.com/mail/answer/6254652?hl=en

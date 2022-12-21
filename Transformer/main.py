@@ -74,7 +74,8 @@ if __name__ == "__main__":
             dkim_private_key = fh.read()
         domain_configuration[domain_data["domain"]] = {
             "dkim_private_key": dkim_private_key,
-            "return-path-domain": domain_data["return-path-domain"]
+            "return-path-domain": domain_data["return-path-domain"],
+            "selector": domain_data.get("selector", "mailer")
         }
 
     beacon_url = None  # args.beacon_url
