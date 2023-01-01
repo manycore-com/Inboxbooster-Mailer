@@ -2,6 +2,7 @@ import os
 import argparse
 import sys
 import yaml
+from reliable_queue import ReliableQueue
 from logging.handlers import RotatingFileHandler
 from transformer import Transformer
 import logging
@@ -16,7 +17,8 @@ def get_arg_parse_object(args):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+    logging.basicConfig(level=os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'),
+                        format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
 
     logging.info("Starting Transformer...")
 
@@ -32,14 +34,6 @@ if __name__ == "__main__":
     if not log_directory.endswith("/"):
         log_directory = log_directory + "/"
 
-    handler = RotatingFileHandler(log_directory + "transformer.log", maxBytes=1000000, backupCount=10)
-    formatter = logging.Formatter('%(asctime)s - %(process)6d - %(levelname)-8s - %(message)s')
-    handler.setFormatter(formatter)
-    logger = logging.getLogger()
-    #logger.handlers.clear()
-    logger.addHandler(handler)
-    logger.setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
-
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
     event_queue_name = global_config["backdata"]["queue-name"]
@@ -47,6 +41,7 @@ if __name__ == "__main__":
         x_mailer = global_config["transformer"].get("x-mailer", "Inboxbooster-Mailer")
     else:
         x_mailer = "Inboxbooster-Mailer"
+    queue_to_postfix = global_config["postfix"]["incoming-queue-name"]
 
     list_unsubscribe = customer_config["transformer"]["email-headers"]["inject"]["List-Unsubscribe"]
     if "feedback-id" in customer_config["transformer"]:
@@ -58,8 +53,6 @@ if __name__ == "__main__":
         feedback_mail_type = None
         feedback_sender = None
 
-    postfix_hostname = customer_config["transformer"]["postfix"]["hostname"]
-    postfix_port = int(customer_config["transformer"]["postfix"]["port"])
     rq_redis_host = customer_config["transformer"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["transformer"]["reliable-queue"]["redis"]["port"])
 
@@ -82,16 +75,13 @@ if __name__ == "__main__":
 
     logging.info("Instantiating Transformer object....")
     transformer = Transformer(
-        primary_queue,
-        default_queue,
+        ReliableQueue(primary_queue, rq_redis_host, rq_redis_port),
+        ReliableQueue(default_queue, rq_redis_host, rq_redis_port),
+        ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port),
+        ReliableQueue(queue_to_postfix, rq_redis_host, rq_redis_port),
         beacon_url,
         domain_configuration,
         list_unsubscribe,
-        postfix_hostname,
-        postfix_port,
-        rq_redis_host,
-        rq_redis_port,
-        event_queue_name,
         feedback_campaign,
         feedback_mail_type,
         feedback_sender,

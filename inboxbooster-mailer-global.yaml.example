@@ -8,3 +8,6 @@ backdata:
 transformer:
   x-mailer:
     Inboxbooster-Mailer
+postfix:
+  incoming-queue-name:
+    INCOMING-TO-POSTFIX
