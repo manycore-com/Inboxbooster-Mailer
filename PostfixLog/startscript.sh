@@ -12,7 +12,12 @@ until [ -f /var/log/mail.log ]
 do
      sleep 1
 done
+
 tail -F /var/log/mail.log &
+
+python3 poll_from_reliable_queue.py \
+  --global-config-file=/configs/inboxbooster-mailer-global.yaml \
+  --customer-config-file=/configs/inboxbooster-mailer-customer.yaml &
 
 python3 main.py \
   --global-config-file=/configs/inboxbooster-mailer-global.yaml \

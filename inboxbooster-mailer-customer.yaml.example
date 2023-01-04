@@ -2,6 +2,7 @@ transformer:
   email-headers:
     inject:
       List-Unsubscribe: <mailto:unsub-{{uuid}}@{{from-domain}}>
+  # TODO remove
   postfix:
     hostname: localhost
     port: 8027
@@ -68,3 +69,7 @@ postfixlog:
     redis:
       hostname: localhost
       port: 6379
+  postfix:
+    # run test_dummy_postfix.sh to have a dummy responder for test.
+    hostname: localhost
+    port: 8026

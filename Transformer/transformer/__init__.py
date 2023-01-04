@@ -3,12 +3,10 @@ import time
 import traceback
 import json
 from email.utils import formatdate
-from smtplib import SMTP as Client
 from typing import Optional
 from email.message import Message
 from email.utils import getaddresses, parseaddr
 from email import message_from_bytes
-from email.utils import parseaddr
 import dkim
 from reliable_queue import ReliableQueue
 
@@ -25,29 +23,25 @@ dkim guide: https://russell.ballestrini.net/quickstart-to-dkim-sign-email-with-p
 class Transformer:
 
     def __init__(self,
-                 prio_queue_name: str,
-                 default_queue_name: str,
+                 prio_queue: ReliableQueue,
+                 default_queue: ReliableQueue,
+                 event_queue: ReliableQueue,
+                 queue_to_postfix: ReliableQueue,
                  beacon_url: Optional[str],
                  domain_configuration: dict,
                  list_unsubscribe: Optional[str],
-                 postfix_hostname: str,
-                 postfix_port: int,
-                 rq_redis_host: str,
-                 rq_redis_port: int,
-                 event_queue_name: str,
                  feedback_campaign: str,
                  feedback_mail_type: str,
                  feedback_sender: str,
                  x_mailer: str):
-        self.prio_queue = ReliableQueue(prio_queue_name, rq_redis_host, rq_redis_port)
-        self.default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
-        self.event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
+        self.prio_queue = prio_queue
+        self.default_queue = default_queue
+        self.event_queue = event_queue
+        self.queue_to_postfix = queue_to_postfix
         # No beacon injection in v1!
         self.beacon_url = beacon_url
         self.domain_configuration = domain_configuration
         self.list_unsubscribe = list_unsubscribe
-        self.postfix_hostname = postfix_hostname
-        self.postfix_port = postfix_port
         self.feedback_campaign = feedback_campaign
         self.feedback_mail_type = feedback_mail_type
         self.feedback_sender = feedback_sender
@@ -128,13 +122,18 @@ class Transformer:
 
             self.set_dkim(parsed_email, from_address_domain, selector)
 
-            client = Client(self.postfix_hostname, self.postfix_port)
-            return_path = "bounce-" + uuid + "@" + return_path_domain
-            message_as_bytes = parsed_email.as_bytes()
-            for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
-                rcpt_to = addr_tuple[1]
-                client.sendmail(return_path, [rcpt_to], message_as_bytes)
-                logging.info("Sent message to=" + rcpt_to + " from=" + str(from_address) + " uuid=" + str(uuid))
+            self.set_xreturnpathib(parsed_email, uuid, return_path_domain)
+
+            logging.info("Pushing to postfix queue " + self.queue_to_postfix._queue_name)
+            self.queue_to_postfix.push(parsed_email.as_bytes())
+
+            #client = Client(self.postfix_hostname, self.postfix_port)
+            #return_path = "bounce-" + uuid + "@" + return_path_domain
+            #message_as_bytes = parsed_email.as_bytes()
+            #for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
+            #    rcpt_to = addr_tuple[1]
+            #    client.sendmail(return_path, [rcpt_to], message_as_bytes)
+            #    logging.info("Sent message to=" + rcpt_to + " from=" + str(from_address) + " uuid=" + str(uuid))
 
         except Exception as ex:
             logging.error(str(ex), exc_info=True, stack_info=True)
@@ -145,6 +144,16 @@ class Transformer:
                     client.close()
                 except Exception as ex:
                     logging.error(ex, exc_info=True, stack_info=True)
+
+    # The mail is a blob.
+    # If we send data outside the eml blob, we need to base-64-encode the eml to get it architecture independent.
+    # I prefer to add extra data as headers and remove them on the Postfix server.
+    def set_xreturnpathib(self, parsed_email: Message, uuid: str, return_path_domain: str):
+        if "X-ReturnPathIb" in parsed_email:
+            del parsed_email["X-ReturnPathIb"]
+        return_path = "bounce-" + uuid + "@" + return_path_domain
+        parsed_email["X-ReturnPathIb"] = return_path
+        logging.info("Setting email header X-ReturnPathIb for the Postfix side to pick up: " + str(parsed_email["X-ReturnPathIb"]))
 
     def set_x_mailer(self, parsed_email: Message):
         if self.x_mailer is not None:
