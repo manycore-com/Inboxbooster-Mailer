@@ -17,6 +17,9 @@ DKIM signing (might move to Postfix if terrible performance)
 Sets return path header for asynchronous bounces.
 
 dkim guide: https://russell.ballestrini.net/quickstart-to-dkim-sign-email-with-python/
+Working OpenSSL version: OpenSSL 1.1.1s  1 Nov 2022
+Note: Private key should start with...
+-----BEGIN RSA PRIVATE KEY-----
 """
 
 
