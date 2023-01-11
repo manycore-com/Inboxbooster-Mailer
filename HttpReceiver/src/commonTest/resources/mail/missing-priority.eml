@@ -1,0 +1,10 @@
+From: from@example.org
+MIME-Version: 1.0
+Date: Wed, 3 Aug 2022 20:36:13 -0700
+Message-ID: <msg.id@example.org>
+Subject: Test Mail Subject
+To: to@example.org
+X-Uuid: 6c0d2660732b4e3ab22974b37263a577
+Content-Type: text/plain; charset="UTF-8"
+
+this is the body of a basic email

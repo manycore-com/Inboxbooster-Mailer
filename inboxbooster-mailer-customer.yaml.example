@@ -1,7 +1,7 @@
 transformer:
   email-headers:
     inject:
-      List-Unsubscribe: <mailto:unsub-{{uuid}}@{{from-domain}}>
+      List-Unsubscribe: "<mailto:unsub-{{uuid}}@{{from-domain}}>"
   # TODO remove
   postfix:
     hostname: localhost
@@ -58,7 +58,7 @@ backdata:
     redis:
       hostname: localhost
       port: 6379
-  post-url: http://localhost:8090
+  post-url: "http://localhost:8090"
   log-directory: logs
 postfixlog:
   logfile: /var/log/mail.log

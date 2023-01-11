@@ -1,0 +1,11 @@
+receiver:
+  bind:
+    inet-interface: localhost
+    inet-port: 8080
+  auth-logins:
+    - username: admin
+      password: secret
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
