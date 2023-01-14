@@ -1,5 +1,6 @@
 package com.magicator.commandline
 
+import com.magicator.PrometheusFeeder
 import com.magicator.exceptions.EventPostError
 import org.pmw.tinylog.Logger
 import com.magicator.reliablequeue.ReliableQueue
@@ -43,6 +44,27 @@ class BackData {
                     "[" + list.joinToString(",") + "]"
                 }
 
+                events?.forEach() { eventByteArray ->
+                    try {
+                        val json = JSONObject(String(eventByteArray, Charsets.UTF_8))
+                        val event = json.getString("event")
+                        when (event) {
+                            "delivered" -> PrometheusFeeder.deliveredEventsCounter.inc()
+                            "bounce" -> PrometheusFeeder.bouncedEventsCounter.inc()
+                            "error" -> PrometheusFeeder.errorEventsCounter.inc()
+                            "spam-report" -> PrometheusFeeder.spamReportEventsCounter.inc()
+                            "unsubscribe" -> PrometheusFeeder.unsubscribeEventsCounter.inc()
+                            else -> {
+                                Logger.error("Unimplemented event type: $event")
+                                PrometheusFeeder.malformedEventsCounter.inc()
+                            }
+                        }
+
+                    } catch (e: Exception) {
+                        Logger.error(e)
+                    }
+                }
+
                 if (null != payload) {
                     Logger.info("Posting " + events?.size + " events: $payload")
                     val client = HttpClient.newHttpClient()
@@ -54,39 +76,15 @@ class BackData {
                     // ConnectException if target does not exist
                     val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
                     Logger.info("Response: $response")
+                    // TODO differentiate between 4xx and 5xx
                     if (400 <= response.statusCode()) {
                         throw EventPostError("Failed to post events. status=" + response.statusCode(), response.statusCode())
                     }
                 }
             } catch (e: Exception) {
 
+                // Just drop events if receiving side rejects the events.
                 Logger.error(e)
-                val oldestAllowedTs = System.currentTimeMillis() / 1000 - this.maxAgeToRetry
-                var nbrEnqueued = 0
-                events?.forEach() { eventBinary ->
-                    try {
-                        val json = JSONObject(String(eventBinary, Charsets.UTF_8))
-                        val ts = json.getLong("timestamp")
-                        if (ts > oldestAllowedTs) {
-                            Logger.info("re-enqueueing " + String(eventBinary, Charsets.UTF_8))
-                            reliableQueue.enqueue(eventBinary)
-                            nbrEnqueued++
-                        } else {
-                            Logger.info("Dropping old event: " + String(eventBinary, Charsets.UTF_8))
-                        }
-                    } catch (e: Exception) {
-                        Logger.error("Failed re-enqueue json: err=" + e.toString() + " json:" + String(eventBinary, Charsets.UTF_8))
-                    }
-                }
-
-                if (nbrEnqueued > 0) {
-                    if (e is EventPostError) {
-                        Logger.info("We had an exception with statusCode=" + e.statusCode + ", sleep for 60s. Enqueued $nbrEnqueued events for retry.")
-                    } else {
-                        Logger.info("We had an unexpected exception error=$e, sleep for 60s. Enqueued $nbrEnqueued events for retry.")
-                    }
-                    Thread.sleep(60L * 1000L)
-                }
 
             }
         }
@@ -120,6 +118,8 @@ class BackData {
             } else {
                 -1
             }
+
+            PrometheusFeeder.start("0.0.0.0", 9090)
 
             val bd = BackData(redisSection["hostname"]!!, port, queueName!!, backDataSection["post-url"]!!, maxAgeToRetry)
             bd.execute()

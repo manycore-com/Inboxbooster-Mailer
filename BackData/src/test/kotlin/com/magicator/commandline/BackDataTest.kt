@@ -9,6 +9,9 @@ import org.pmw.tinylog.Logger
 
 class BackDataTest {
 
+    // ./test_server.py localhost 8090
+
+
     @Test
     fun test() {
         Logger.getConfiguration().level(Level.DEBUG).activate()
