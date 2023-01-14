@@ -27,7 +27,7 @@ class BackDataTest {
 
         val rq = ReliableQueue("localhost", 6379, "EVENT_QUEUE", 50)
         val ts = System.currentTimeMillis() / 1000
-        rq.jedis.rpush(rq.queueNameByteArray, ("{\"event\": \"delivered\", \"uuid\": \"201712140215549185A2A16DB\", \"timestamp\": " + ts + ", \"ip\": null}").encodeToByteArray())
+        rq.jedis.rpush(rq.queueNameByteArray, ("{\"event\": \"bounce\", \"uuid\": \"20230114014821.4207346E09F\", \"timestamp\": 1673660908, \"ip\": \"178.32.234.67\", \"type\": \"hard\", \"reason\": \"(host mxserver.wizbii-mailer.com[178.32.234.67] said: 503 Error: need MAIL command (in reply to RCPT TO command))\"}").encodeToByteArray())
 
         val args = listOf<String>(
             "--global-config-file", "../inboxbooster-mailer-global.yaml.example",

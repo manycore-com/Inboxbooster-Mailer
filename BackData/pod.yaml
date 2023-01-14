@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: backdata
+  labels:
+    environment: production
 spec:
   containers:
     - name: backdata
