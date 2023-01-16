@@ -1,10 +1,12 @@
 # kubectl create -f pod.yaml
+
 apiVersion: v1
 kind: Pod
 metadata:
   name: backdata
   labels:
     environment: production
+    app.kubernetes.io/name: backdata
 spec:
   containers:
     - name: backdata

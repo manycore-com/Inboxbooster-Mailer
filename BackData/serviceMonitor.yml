@@ -18,3 +18,4 @@ spec:
     # List of labels identifying your service
     matchLabels:
       environment: production
+      app.kubernetes.io/name: backdata
