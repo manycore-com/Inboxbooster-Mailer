@@ -11,6 +11,8 @@ spec:
   containers:
     - name: backdata
       image: inboxbooster/backdata
+      ports:
+        - containerPort: 9090
       volumeMounts:
         - name: configs
           mountPath: "/configs"

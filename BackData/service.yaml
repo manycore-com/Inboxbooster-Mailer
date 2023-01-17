@@ -8,4 +8,5 @@ spec:
     targetPort: 9090
     name: backdata
   selector:
-    app: backdata
+    app.kubernetes.io/name: backdata
+    environment: production
