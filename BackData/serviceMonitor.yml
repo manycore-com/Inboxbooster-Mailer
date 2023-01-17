@@ -2,12 +2,14 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: backdata   # UID of the resource in the namespace
+  namespace: monitoring
 spec:
   endpoints:
   - honorLabels: true
     interval: 30s
     port: "9090"
     path: "/metrics"
+    targetPort: 9090
     metricRelabelings:
     - action: labelmap
       regex: __meta_kubernetes_pod_label_(.+)
@@ -17,5 +19,5 @@ spec:
   selector:
     # List of labels identifying your service
     matchLabels:
-      environment: production
       app.kubernetes.io/name: backdata
+      environment: production

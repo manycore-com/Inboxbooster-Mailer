@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: backdata
+  labels:
+    app.kubernetes.io/name: backdata
+    environment: production
 spec:
   ports:
   - port: 9090
