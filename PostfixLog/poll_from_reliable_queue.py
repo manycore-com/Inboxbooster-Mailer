@@ -68,9 +68,14 @@ if __name__ == "__main__":
                                      " MessageID=" + str(message_id) +
                                      " subject=" + str(subject))
                         message_as_bytes = parsed_email.as_bytes()
-                        for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
-                            rcpt_to = addr_tuple[1]
+                        if "X-RecipientIb" in parsed_email:
+                            rcpt_to = parsed_email["X-RecipientIb"]
+                            del parsed_email["X-RecipientIb"]
                             client.sendmail(return_path, [rcpt_to], message_as_bytes)
+                        else:
+                            for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
+                                rcpt_to = addr_tuple[1]
+                                client.sendmail(return_path, [rcpt_to], message_as_bytes)
                     else:
                         logging.error("Missing X-ReturnPathIb: from=" + str(from_address) + " to=" + str(email_to) +
                                       " MessageID=" + str(message_id) +
