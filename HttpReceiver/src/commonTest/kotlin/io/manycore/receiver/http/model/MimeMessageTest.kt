@@ -39,4 +39,11 @@ class MimeMessageTest {
         assertContentEquals(listOf("A", "B", "C", "D", "E", "F"), message.headers["Repeated"])
     }
 
+    @Test
+    fun `Can count recipients in headers`() = runBlocking {
+        val eml = readResource("mail/count-recipients.eml")
+        val message = MimeMessage(ByteReadChannel(eml))
+        assertEquals(5, message.countRecipients())
+    }
+
 }

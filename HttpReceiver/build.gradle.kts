@@ -10,6 +10,7 @@ group = "io.manycore.receiver.http"
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlinx.atomicfu)
     alias(libs.plugins.kotlinx.serialization)
 }
 

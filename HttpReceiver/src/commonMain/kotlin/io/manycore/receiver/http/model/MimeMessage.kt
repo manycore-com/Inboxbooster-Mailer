@@ -85,6 +85,16 @@ class MimeMessage private constructor(
     }
 
     /**
+     * Counts the amount of recipients found in To, Cc and Bcc headers.
+     */
+    fun countRecipients(): Int =
+        listOfNotNull(headers["To"], headers["Cc"], headers["Bcc"])
+            .map { values -> values.last() } // To, Cc and Bcc are 0..1, only read last one
+            .sumOf { value ->
+                value.split(',').size
+            }
+
+    /**
      * Reads the entire [source] and returns the entire raw message.
      */
     suspend fun asByteArray(): ByteArray {

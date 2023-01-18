@@ -3,6 +3,6 @@ package io.manycore.receiver.http.app.resource
 import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 
-@Resource("/v1/mail/send")
+@Resource("/metrics")
 @Serializable
-object V1MailSend
+object MetricsResource

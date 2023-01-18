@@ -15,8 +15,8 @@ class MimeMessageHeaders private constructor(
                 rawHeaders
                     .split(headerSplitRegex)
                     .map { header ->
-                        val (key, value) = header.split(": ", limit = 2)
-                        key.lowercase() to value.replace(spacesRegex, " ")
+                        val (key, value) = header.split(":", limit = 2)
+                        key.lowercase() to value.replace(spacesRegex, " ").trim()
                     }
                     .groupBy { (key, _) -> key }
                     .map { (key, entries) ->
