@@ -1,0 +1,7 @@
+reliable-queue:
+  queue-names:
+    primary-queue: IB-MAIL-QUEUE-P0
+    default-queue: IB-MAIL-QUEUE-P1
+backdata:
+  queue-name:
+    EVENT_QUEUE

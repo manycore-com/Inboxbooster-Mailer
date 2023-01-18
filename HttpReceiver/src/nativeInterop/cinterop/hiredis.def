@@ -1,0 +1,6 @@
+headers = hiredis.h
+package = hiredis
+staticLibraries = libhiredis.a
+libraryPaths = build/hiredis
+
+compilerOpts = -Ibuild/hiredis
