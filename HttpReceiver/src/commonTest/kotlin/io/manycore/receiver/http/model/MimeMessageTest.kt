@@ -18,6 +18,14 @@ class MimeMessageTest {
     }
 
     @Test
+    fun `Can parse different case headers`() = runBlocking {
+        val eml = readResource("mail/different-case.eml")
+        val message = MimeMessage(ByteReadChannel(eml))
+        assertEquals(MimeMessagePriority.DEFAULT, message.priority)
+        assertEquals("6c0d2660732b4e3ab22974b37263a577", message.uuid)
+    }
+
+    @Test
     fun `Can parse multiline header`() = runBlocking {
         val eml = readResource("mail/multiline-header.eml")
         val message = MimeMessage(ByteReadChannel(eml))

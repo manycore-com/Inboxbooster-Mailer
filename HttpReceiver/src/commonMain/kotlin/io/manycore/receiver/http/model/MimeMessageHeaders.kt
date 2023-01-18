@@ -1,8 +1,8 @@
 package io.manycore.receiver.http.model
 
 class MimeMessageHeaders private constructor(
-    headers: Map<String, List<String>>,
-) : Map<String, List<String>> by headers {
+    private val headersWithLowercaseKeys: Map<String, List<String>>,
+) {
 
     companion object {
 
@@ -16,7 +16,7 @@ class MimeMessageHeaders private constructor(
                     .split(headerSplitRegex)
                     .map { header ->
                         val (key, value) = header.split(": ", limit = 2)
-                        key to value.replace(spacesRegex, " ")
+                        key.lowercase() to value.replace(spacesRegex, " ")
                     }
                     .groupBy { (key, _) -> key }
                     .map { (key, entries) ->
@@ -26,5 +26,8 @@ class MimeMessageHeaders private constructor(
             )
 
     }
+
+    operator fun get(key: String): List<String>? =
+        headersWithLowercaseKeys[key.lowercase()]
 
 }
