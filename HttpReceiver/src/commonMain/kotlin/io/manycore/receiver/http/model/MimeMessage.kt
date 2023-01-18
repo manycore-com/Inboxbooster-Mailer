@@ -12,10 +12,20 @@ class MimeMessage private constructor(
 
     companion object {
 
-        private val endOfHeadersDelimiters = arrayOf(
-            "\n\n",
-            "\r\n\r\n",
-        )
+        private const val READ_BUFFER_SIZE = 512
+
+        private val endOfHeadersDelimiters: List<ByteArray> =
+            listOf(
+                "\n\n",
+                "\r\n\r\n",
+            ).map { delimiter ->
+                // Encode in UTF-8, but it's the same as plain ASCII for characters < 128
+                require(delimiter.all { char -> char.code < 128 })
+                delimiter.encodeToByteArray()
+            }
+
+        private val endOfHeadersDelimitersMaxLength =
+            endOfHeadersDelimiters.maxOf(ByteArray::size)
 
         private val uuidRegex = Regex("[a-z0-9]{32}")
 
@@ -74,8 +84,18 @@ class MimeMessage private constructor(
         uuid
     }
 
+    /**
+     * Reads the entire [source] and returns the entire raw message.
+     */
+    suspend fun asByteArray(): ByteArray {
+        if (!source.isClosedForRead) {
+            seenBytes.write(source.readRemaining().readBytes())
+        }
+        return seenBytes.readByteArray()
+    }
+
     private suspend fun readRawHeaders(): String {
-        val buffer = ByteArray(512)
+        val buffer = ByteArray(READ_BUFFER_SIZE)
         while (!source.isClosedForRead) {
 
             // Read a bunch of bytes
@@ -96,25 +116,18 @@ class MimeMessage private constructor(
             seenBytes.write(buffer, 0, read)
 
             // Stop if what we read contain a delimiter
-            val seenBytesAsString = seenBytes.snapshot().utf8()
+            val seenBytesAsByteString = seenBytes.snapshot()
+            // Only check the last read part + an offset in case a delimiter is right between 2 read parts
+            val fromIndex = seenBytesAsByteString.size - READ_BUFFER_SIZE - endOfHeadersDelimitersMaxLength
             for (delimiter in endOfHeadersDelimiters) {
-                if (delimiter in seenBytesAsString) {
-                    return seenBytesAsString.substringBefore(delimiter)
+                val i = seenBytesAsByteString.indexOf(delimiter, fromIndex)
+                if (i != -1) {
+                    return seenBytesAsByteString.substring(0, i).utf8()
                 }
             }
 
         }
         throw IllegalArgumentException("Malformed source: content delimiter not found")
-    }
-
-    /**
-     * Reads the entire [source] and returns the entire raw message.
-     */
-    suspend fun asByteArray(): ByteArray {
-        if (!source.isClosedForRead) {
-            seenBytes.write(source.readRemaining().readBytes())
-        }
-        return seenBytes.readByteArray()
     }
 
 }
