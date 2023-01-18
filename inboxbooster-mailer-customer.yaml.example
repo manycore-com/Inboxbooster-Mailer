@@ -73,3 +73,11 @@ postfixlog:
     # run test_dummy_postfix.sh to have a dummy responder for test.
     hostname: localhost
     port: 8026
+common-config:
+  object-storage:
+    type: s3
+    bucket: testbucket
+    region: us-east-1
+    access-key-id: testkey
+    secret-access-key: testsecret
+    endpoint-url: https://s3.us-east-1.amazonaws.com
