@@ -1,3 +1,4 @@
+import signal
 import logging
 import os
 import argparse
@@ -6,6 +7,14 @@ from email import message_from_bytes
 from smtplib import SMTP as Client
 from reliable_queue import ReliableQueue
 from email.utils import getaddresses, parseaddr
+
+do_run = True
+
+
+def signal_handler(sig, frame):
+    global do_run
+    do_run = False
+    logging.info("SIGINT handler")
 
 
 def get_arg_parse_object():
@@ -17,6 +26,7 @@ def get_arg_parse_object():
 
 if __name__ == "__main__":
     args = get_arg_parse_object()
+    signal.signal(signal.SIGINT, signal_handler)
 
     logging.basicConfig(level=os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'),
                         format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
@@ -38,7 +48,7 @@ if __name__ == "__main__":
 
     logging.info("PollToPostfix enter loop. polling from " + incoming_queue._queue_name)
     try:
-        while True:
+        while do_run:
             try:
                 client = None
                 from_address = None
@@ -46,7 +56,7 @@ if __name__ == "__main__":
                 subject = None
                 message_id = None
                 return_path = None
-                msg = incoming_queue.blocking_pop(5)
+                msg = incoming_queue.blocking_pop(3)
                 if msg is not None:
                     parsed_email = message_from_bytes(msg)  # type: Message
                     from_address = parseaddr(parsed_email.get("From"))[1]
