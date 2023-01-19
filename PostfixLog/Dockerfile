@@ -5,6 +5,7 @@ FROM ubuntu:22.04
 
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
 RUN apt-get update \
   && apt-get -qq -y install postfix \
   && apt-get -qq -y install syslog-ng \
