@@ -7,7 +7,6 @@ spec:
   endpoints:
   - honorLabels: true
     interval: 30s
-    port: "9090"
     path: "/metrics"
     targetPort: 9090
     metricRelabelings:
