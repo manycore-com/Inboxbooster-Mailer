@@ -7,6 +7,7 @@ from email.utils import parseaddr, getaddresses
 from email import message_from_bytes
 import logging as logger
 from reliable_queue import ReliableQueue
+from prometheus import NBR_EMAILS_ENQUEUED_TOTAL, NBR_RECIPIENTS_TOTAL, NBR_DROPPED_EMAILS_TOTAL, start
 
 from .utils import safe_sleep
 
@@ -32,6 +33,11 @@ class MessageQueueWriter(object):
         if to_data is not None:
             for tuple in getaddresses(to_data):
                 email_to.append(tuple[1])
+        email_cc = []
+        cc_data = parsed_email.get_all("Cc")
+        if cc_data is not None:
+            for tuple in getaddresses(cc_data):
+                email_to.append(tuple[1])
         email_from = []
         from_data = parsed_email.get_all("From")
         if from_data is not None:
@@ -48,22 +54,27 @@ class MessageQueueWriter(object):
                     priority = 1
             except Exception as ex:
                 priority = 1
-        return email_to, email_from, ip, priority, parsed_email.get("Subject", "")
+        return email_to, email_cc, email_from, ip, priority, parsed_email.get("Subject", "")
 
     def run(self):
+        logger.info("Starting Prometheus /metric on port 9090 from MultiProcessingQueue process")
+        start()
         safe_sleep(1)
         while True:
             try:
                 smtp_data = self.queue.get()
                 parsed_email = message_from_bytes(smtp_data)
-                email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
+                email_to, email_cc, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
                 if 0 == priority:
                     self.prio_queue.push(smtp_data)
                     logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " subject=" + subject)
                 else:
                     self.default_queue.push(smtp_data)
                     logger.info("Enqueued email to RQ: " + self.default_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " subject=" + subject)
+                NBR_EMAILS_ENQUEUED_TOTAL.inc()
+                NBR_RECIPIENTS_TOTAL.inc(len(email_to) + len(email_cc))
             except Exception as e:
+                NBR_DROPPED_EMAILS_TOTAL.inc(1)
                 logger.error("Error. Will send error event.", exc_info=True, stack_info=True)
                 try:
                     event = {

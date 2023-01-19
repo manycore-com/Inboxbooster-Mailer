@@ -14,6 +14,7 @@ RUN mkdir -p /app/logs
 
 COPY . .
 
+ENV PYTHONUNBUFFERED=1
 CMD [ "python3", "main.py", \
   "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \
   "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml", \

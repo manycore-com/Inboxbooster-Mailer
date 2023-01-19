@@ -15,14 +15,16 @@ packaging==21.3
 parso==0.8.3
 pexpect==4.8.0
 pickleshare==0.7.5
+prometheus-client==0.15.0
 prompt-toolkit==3.0.33
 ptyprocess==0.7.0
 pure-eval==0.2.2
 Pygments==2.13.0
 pyparsing==3.0.9
+python-dateutil==2.8.2
 PyYAML==6.0
 redis==4.3.5
-reliable-queue==0.0.3
+reliable-queue==0.0.4
 six==1.16.0
 stack-data==0.6.1
 traitlets==5.5.0

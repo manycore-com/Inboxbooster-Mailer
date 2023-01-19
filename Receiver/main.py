@@ -4,7 +4,6 @@ import ssl
 import sys
 import time
 import logging
-from logging.handlers import RotatingFileHandler
 from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword, SMTP, Session, Envelope
 from smtpd import SmtpdHandler
