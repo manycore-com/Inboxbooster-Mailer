@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: receiver
+  namespace: default
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: 30s
+    port: "9090"
+    path: "/metrics"
+    targetPort: 9090
+    metricRelabelings:
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    # List of labels identifying your service
+    matchLabels:
+      app.kubernetes.io/name: receiver
+      environment: production

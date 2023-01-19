@@ -3,12 +3,19 @@ apiVersion: v1
 kind: Service
 metadata:
   name: receiver
+  labels:
+    app.kubernetes.io/name: receiver
+    environment: production
 spec:
   ports:
   - name: my-port
     port: 587
     protocol: TCP
     targetPort: 587
+  - name: prometheus
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
   selector:
     app: receiver
   type: ClusterIP

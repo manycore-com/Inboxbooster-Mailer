@@ -11,6 +11,9 @@ spec:
       image: inboxbooster/receiver
       ports:
         - containerPort: 587
+          name: smtp
+        - containerPort: 9090
+          name: prometheus
       volumeMounts:
         - name: configs
           mountPath: "/configs"
