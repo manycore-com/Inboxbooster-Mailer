@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: backdata   # UID of the resource in the namespace
-  namespace: monitoring
+  namespace: default
 spec:
   endpoints:
   - honorLabels: true
