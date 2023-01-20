@@ -91,11 +91,16 @@ class MessageQueueWriter(object):
                     logger.error("Error sending error event")
                     logger.error(e, exc_info=True, stack_info=True)
 
-    @staticmethod
-    def kill_worker():
+    def kill_worker(self):
         logger.info("MessageQueueWriter.kill_worker() called")
-        if MessageQueueWriter.singleton_ is None:
-            return
-        MessageQueueWriter.get_instance().process.terminate()
-        MessageQueueWriter.get_instance().process.join()
-        MessageQueueWriter.singleton_ = None
+        logger.info("mpq.kill_worker() calling process.terminate()")
+        self.process.terminate()
+        self.process.join()
+        logger.info("mpq.kill_worker() taking down ReliableQueues")
+        self.prio_queue.set_shutdown(True)
+        self.default_queue.set_shutdown(True)
+        self.event_queue.set_shutdown(True)
+        self.prio_queue.close()
+        self.default_queue.close()
+        self.event_queue.close()
+        logger.info("kill_worker is done")

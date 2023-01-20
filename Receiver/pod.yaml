@@ -1,4 +1,9 @@
 # kubectl create -f pod.yaml
+
+# minicube tests. First line overrides docker repo to minicube.
+# eval $(minikube -p minikube docker-env)
+# docker build -t inboxbooster/receiver:latest .
+
 apiVersion: v1
 kind: Pod
 metadata:
@@ -19,6 +24,14 @@ spec:
           mountPath: "/configs"
           readOnly: true
       imagePullPolicy: Always
+      lifecycle:
+        preStop:
+          exec:
+            command: [
+              "python3", "/app/shutdown.py",
+              "--global-config-file=/configs/inboxbooster-mailer-global.yaml",
+              "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+            ]
   volumes:
     - name: configs
       configMap:

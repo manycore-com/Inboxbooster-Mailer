@@ -11,8 +11,12 @@ COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 RUN mkdir -p /app/logs
+RUN mkdir -p /app/prometheus
+RUN mkdir -p /app/smtpd
 
-COPY . .
+COPY prometheus /app/prometheus
+COPY smtpd /app/smtpd
+COPY *.py /app/
 
 ENV PYTHONUNBUFFERED=1
 CMD [ "python3", "main.py", \

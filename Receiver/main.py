@@ -1,6 +1,7 @@
 import os
 import argparse
 import ssl
+import signal
 import sys
 import time
 import logging
@@ -11,6 +12,15 @@ from reliable_queue import ReliableQueue
 import yaml
 
 auth_db = {}
+do_run = True
+
+
+def signal_handler(sig, frame):
+    global do_run
+    do_run = False
+    do_run = False
+    do_run = False
+    logging.info("SIGINT handler")
 
 
 def get_arg_parse_object(args):
@@ -38,6 +48,11 @@ def authenticator_func(server: SMTP, session: Session, envelope: Envelope, mecha
 
 if __name__ == "__main__":
     args = get_arg_parse_object(sys.argv[1:])
+
+    os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_RECEIVER_PID")
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGQUIT, signal_handler)
 
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
     logging.getLogger().setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
@@ -76,8 +91,9 @@ if __name__ == "__main__":
 
     logging.info("Starting Receiver on " + bind_address + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 
+    smtpd_handler = SmtpdHandler(prio_queue, default_queue, event_queue)
     controller = Controller(
-        SmtpdHandler(prio_queue, default_queue, event_queue),
+        smtpd_handler,
         hostname=bind_address,
         port=port,
         authenticator=authenticator_func,  # i.e., the name of your authenticator function
@@ -86,7 +102,15 @@ if __name__ == "__main__":
         tls_context=context
     )
 
-    server = controller.start()
-    logging.info("Smtpd started on " + str(controller.port))
-    while True:
-        time.sleep(3600)
+    controller.start()
+    logging.info("Smtpd started on " + str(controller.port) + " waiting for SIGINT or SIGQUIT to die")
+    while do_run:
+        time.sleep(2)
+    logging.info("calling controller.stop()")
+    controller.stop()  # Immediately stops accepting new connections
+    time.sleep(1)
+    smtpd_handler.mqw.kill_worker()
+    smtpd_handler.mqw.process.is_alive()
+
+
+
