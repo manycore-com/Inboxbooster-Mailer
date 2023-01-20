@@ -14,23 +14,37 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import redis.clients.jedis.exceptions.JedisException
 
 class BackData {
 
-    var reliableQueue: ReliableQueue
+    var reliableQueue: ReliableQueue?
     val postUrl: String
     val maxAgeToRetry: Long
+
+    val redisHost: String
+    val redisPort: Int
+    val queueName: String
     constructor(redisHost: String, redisPort: Int, queueName: String, postUrl: String, maxAgeToRetry: Long) {
-        this.reliableQueue = ReliableQueue(redisHost, redisPort, queueName, 50)
+        this.reliableQueue = null
         this.postUrl = postUrl
         this.maxAgeToRetry = maxAgeToRetry
+
+        this.redisHost = redisHost
+        this.redisPort = redisPort
+        this.queueName = queueName
     }
 
     fun execute() {
+        var anyException = false
         while (true) {
             var events: List<ByteArray>? = null
             try {
-                events = reliableQueue.blockingPoll()
+                if (null == reliableQueue) {
+                    Logger.info("JedisException raised, reconnecting to Redis.")
+                    reliableQueue = ReliableQueue(redisHost, redisPort, queueName, 50)
+                }
+                events = reliableQueue!!.blockingPoll()
 
                 val payload: String? = if (events == null) {
                     null
@@ -78,14 +92,39 @@ class BackData {
                     Logger.info("Response: $response")
                     // TODO differentiate between 4xx and 5xx
                     if (400 <= response.statusCode()) {
-                        throw EventPostError("Failed to post events. status=" + response.statusCode(), response.statusCode())
+                        throw EventPostError(
+                            "Failed to post events. status=" + response.statusCode(),
+                            response.statusCode()
+                        )
                     }
                 }
+
+                if (anyException) {
+                    Logger.info("No more exceptions. Made a full cycle.")
+                    anyException = false
+                }
+
+            } catch (e: JedisException) {
+
+                if (! anyException) {
+                    Logger.error(e)
+                }
+
+                this.reliableQueue?.close()
+                this.reliableQueue = null
+
+                anyException = true
+
             } catch (e: Exception) {
 
                 // Just drop events if receiving side rejects the events.
                 Logger.error(e)
+                anyException = true
 
+            } finally {
+                if (anyException) {
+                    Thread.sleep(2000)
+                }
             }
         }
     }

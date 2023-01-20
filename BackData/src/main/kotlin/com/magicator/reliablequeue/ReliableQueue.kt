@@ -1,5 +1,6 @@
 package com.magicator.reliablequeue
 
+import org.pmw.tinylog.Logger
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 
@@ -57,7 +58,13 @@ class ReliableQueue {
         jedis.rpush(this.queueNameByteArray, data)
     }
 
-    fun stop() {
+    fun close() {
+        try {
+            this.jedis.close()
+        } catch (e: Exception) {
+            Logger.error(e)
+        }
+
         running = false
     }
 }
