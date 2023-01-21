@@ -2,10 +2,20 @@ import os
 import argparse
 import sys
 import yaml
+import signal
 from reliable_queue import ReliableQueue
-from logging.handlers import RotatingFileHandler
 from transformer import Transformer
 import logging
+
+
+transformerObject = None
+
+
+def signal_handler(sig, frame):
+    global transformerObject
+    logging.info("SIGINT/SIGQUIT handler")
+    if transformerObject is not None:
+        transformerObject.close()
 
 
 def get_arg_parse_object(args):
@@ -21,6 +31,11 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
 
     logging.info("Starting Transformer...")
+
+    os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_TRANSFORMER_PID")
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGQUIT, signal_handler)
 
     args = get_arg_parse_object(sys.argv[1:])
 
@@ -74,7 +89,7 @@ if __name__ == "__main__":
     beacon_url = None  # args.beacon_url
 
     logging.info("Instantiating Transformer object....")
-    transformer = Transformer(
+    transformerObject = Transformer(
         ReliableQueue(primary_queue, rq_redis_host, rq_redis_port),
         ReliableQueue(default_queue, rq_redis_host, rq_redis_port),
         ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port),
@@ -88,4 +103,4 @@ if __name__ == "__main__":
         x_mailer
     )
     logging.info("Running Transformer loop...")
-    transformer.run()
+    transformerObject.run()

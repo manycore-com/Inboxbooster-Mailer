@@ -11,12 +11,14 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
-RUN mkdir -p /app/logs
 
-COPY . .
+RUN mkdir -p /app/logs
+RUN mkdir -p /app/transformer
+
+COPY transformer /app/transformer
+COPY *.py /app/
 
 ENV PYTHONUNBUFFERED=1
 CMD [ "python3", "main.py", \
   "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \
   "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml" ]
-

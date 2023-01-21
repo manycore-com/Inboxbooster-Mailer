@@ -49,9 +49,13 @@ class Transformer:
         self.feedback_mail_type = feedback_mail_type
         self.feedback_sender = feedback_sender
         self.x_mailer = x_mailer
+        self.is_running = True
+
+    def close(self):
+        self.is_running = False
 
     def run(self):
-        while True:
+        while self.is_running:
             any = False
             while not self.prio_queue.is_ram_empty():
                 msg = self.prio_queue.blocking_pop(1)
@@ -69,6 +73,7 @@ class Transformer:
                     break
             if not any:
                 time.sleep(1)
+        logging.info("Transformer loop done")
 
     def transform(self, msg: bytes):
         logging.info("New message. size:" + str(len(msg)))
