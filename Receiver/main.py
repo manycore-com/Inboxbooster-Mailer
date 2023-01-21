@@ -18,9 +18,7 @@ do_run = True
 def signal_handler(sig, frame):
     global do_run
     do_run = False
-    do_run = False
-    do_run = False
-    logging.info("SIGINT handler")
+    logging.info("SIGINT/SIGQUIT handler")
 
 
 def get_arg_parse_object(args):
@@ -48,6 +46,8 @@ def authenticator_func(server: SMTP, session: Session, envelope: Envelope, mecha
 
 if __name__ == "__main__":
     args = get_arg_parse_object(sys.argv[1:])
+
+    logging.info("Starting Receiver...")
 
     os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_RECEIVER_PID")
 
