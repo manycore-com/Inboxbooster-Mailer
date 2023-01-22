@@ -37,7 +37,7 @@ class SmtpdHandler(object):
 
     async def handle_DATA(self, server: SMTP, session: Session, envelope: Envelope):
         try:
-            assert len(envelope.rcpt_tos) == 1
+            #assert len(envelope.rcpt_tos) == 1
             self.addMail(envelope)
             logging.debug("handler_DATA -> 250 Message accepted for delivery")
             return '250 Message accepted for delivery'
