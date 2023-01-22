@@ -45,6 +45,9 @@ def authenticator_func(server: SMTP, session: Session, envelope: Envelope, mecha
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+    logging.getLogger().setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
+
     args = get_arg_parse_object(sys.argv[1:])
 
     logging.info("Starting Receiver...")
@@ -53,9 +56,6 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGQUIT, signal_handler)
-
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
-    logging.getLogger().setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
 
     with open(args.global_config_file, 'r') as file:
         global_config = yaml.safe_load(file)  # dict
