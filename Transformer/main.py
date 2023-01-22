@@ -28,7 +28,7 @@ def get_arg_parse_object(args):
 
 if __name__ == "__main__":
     logging.basicConfig(level=os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'),
-                        format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+                        format='%(asctime)s - %(levelname)s - %(message)s')
 
     logging.info("Starting Transformer...")
 
