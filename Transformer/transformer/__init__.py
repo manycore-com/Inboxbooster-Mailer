@@ -132,7 +132,7 @@ class Transformer:
 
             self.set_xreturnpathib(parsed_email, uuid, return_path_domain)
 
-            logging.info("Pushing to postfix queue " + self.queue_to_postfix._queue_name)
+            logging.info("Pushing to postfix queue " + self.queue_to_postfix.get_queue_name())
             self.queue_to_postfix.push(parsed_email.as_bytes())
 
             #client = Client(self.postfix_hostname, self.postfix_port)
