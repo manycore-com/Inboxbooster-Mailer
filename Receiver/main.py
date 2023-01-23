@@ -110,7 +110,4 @@ if __name__ == "__main__":
     controller.stop()  # Immediately stops accepting new connections
     time.sleep(1)
     smtpd_handler.mqw.kill_worker()
-    smtpd_handler.mqw.process.is_alive()
-
-
 
