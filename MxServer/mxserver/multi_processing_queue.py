@@ -52,10 +52,9 @@ class MessageQueueWriter(object):
             with open(filename, "wb") as keyfile:
                 keyfile.write(parsed_email.as_bytes())
 
-    @staticmethod
-    def kill_worker():
-        if MessageQueueWriter.singleton_ is None:
-            return
-        MessageQueueWriter.get_instance().process.terminate()
-        MessageQueueWriter.get_instance().process.join()
-        MessageQueueWriter.singleton_ = None
+    def kill_worker(self):
+        logging.info("MessageQueueWriter.kill_worker() called")
+        logging.info("mpq.kill_worker() calling process.terminate()")
+        self.process.terminate()
+        self.process.join()
+        logging.info("kill_worker is done")

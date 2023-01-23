@@ -16,6 +16,14 @@ spec:
           mountPath: "/configs"
           readOnly: true
       imagePullPolicy: Always
+      lifecycle:
+        preStop:
+          exec:
+            command: [
+              "python3", "/app/shutdown.py",
+              "--global-config-file=/configs/inboxbooster-mailer-global.yaml",
+              "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+            ]
   volumes:
     - name: configs
       configMap:
