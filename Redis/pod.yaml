@@ -1,5 +1,9 @@
 # kubectl create -f pod.yaml
 
+# kubectlmini create configmap inboxbooster-config \
+#  --from-file inboxbooster-mailer-customer.yaml \
+#  --from-file inboxbooster-mailer-global.yaml
+
 apiVersion: v1
 kind: Pod
 metadata:
@@ -8,7 +12,24 @@ metadata:
     app: redis
 spec:
   containers:
-    - name: redis
-      image: redis
+    - name: test
+      image: inboxbooster/redis:latest
+      imagePullPolicy: Always
       ports:
         - containerPort: 6379
+      volumeMounts:
+        - name: configs
+          mountPath: "/configs"
+          readOnly: true
+      lifecycle:
+        preStop:
+          exec:
+            command: [
+              "python3", "/app/shutdown.py",
+              "--global-config-file=/configs/inboxbooster-mailer-global.yaml",
+              "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+            ]
+  volumes:
+    - name: configs
+      configMap:
+        name: inboxbooster-config
