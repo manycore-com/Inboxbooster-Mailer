@@ -9,6 +9,7 @@ from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword, SMTP, Session, Envelope
 from smtpd import SmtpdHandler
 from reliable_queue import ReliableQueue
+from prometheus import start, NBR_EMAILS_ENQUEUED_TOTAL
 import yaml
 
 auth_db = {}
@@ -88,6 +89,11 @@ if __name__ == "__main__":
     prio_queue = ReliableQueue(primary_queue, rq_redis_host, rq_redis_port)
     default_queue = ReliableQueue(default_queue, rq_redis_host, rq_redis_port)
     event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
+
+    logging.info("Starting Prometheus endpoint")
+    start()
+
+    NBR_EMAILS_ENQUEUED_TOTAL.inc()
 
     logging.info("Starting Receiver on " + bind_address + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 

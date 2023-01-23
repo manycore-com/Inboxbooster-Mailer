@@ -5,6 +5,7 @@ import logging
 from email.utils import parseaddr
 from .multi_processing_queue import MessageQueueWriter
 from reliable_queue import ReliableQueue
+from prometheus import NBR_DROPPED_EMAILS_TOTAL
 
 # Var
 DEBUG = False
@@ -43,5 +44,6 @@ class SmtpdHandler(object):
             return '250 Message accepted for delivery'
         except Exception as err:
             logging.error(str(err), exc_info=True, stack_info=True)
+            NBR_DROPPED_EMAILS_TOTAL.inc()
             return "400 Unknown Error. Please retry later. Support is already notified."
 

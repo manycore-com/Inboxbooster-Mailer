@@ -7,7 +7,7 @@ from email.utils import parseaddr, getaddresses
 from email import message_from_bytes
 import logging as logger
 from reliable_queue import ReliableQueue
-from prometheus import NBR_EMAILS_ENQUEUED_TOTAL, NBR_RECIPIENTS_TOTAL, NBR_DROPPED_EMAILS_TOTAL, start
+from prometheus import NBR_EMAILS_ENQUEUED_TOTAL, NBR_RECIPIENTS_TOTAL, NBR_DROPPED_EMAILS_TOTAL
 
 from .utils import safe_sleep
 
@@ -58,7 +58,6 @@ class MessageQueueWriter(object):
 
     def run(self):
         logger.info("Starting Prometheus /metric on port 9090 from MultiProcessingQueue process")
-        start()
         safe_sleep(1)
         while True:
             try:
