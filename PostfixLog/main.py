@@ -3,8 +3,18 @@ import os
 import time
 import argparse
 import yaml
+import signal
 from reliable_queue import ReliableQueue
 from postfixlog import PostfixLog
+
+
+do_run = True
+
+
+def signal_handler(sig, frame):
+    global do_run
+    do_run = False
+    logging.info("Log Analyzer: SIGINT/SIGQUIT handler")
 
 
 def get_arg_parse_object():
@@ -15,9 +25,17 @@ def get_arg_parse_object():
 
 
 if __name__ == "__main__":
-    args = get_arg_parse_object()
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
 
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGQUIT, signal_handler)
+
+    logging.info("Starting Log Analyzer")
+
+    os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_POSTFIX_LOGANALYZER_PID")
+
+    args = get_arg_parse_object()
 
     with open(args.global_config_file, 'r') as file:
         global_config = yaml.safe_load(file)
@@ -52,7 +70,9 @@ if __name__ == "__main__":
     pl = PostfixLog(reliable_queue)
 
     logging.info("Starting PostfixLog")
-    while True:
+    running = True
+    while running:
+        running = do_run
         if os.path.isfile(postfix_logfile):
             with open(postfix_logfile, "r") as f:
                 at_line = 0
@@ -76,5 +96,7 @@ if __name__ == "__main__":
                 f.write("\n")
                 #logging.debug("Currently at_line=" + str(at_line))
                 location_lineno = at_line
-            time.sleep(20)
+        for i in range(10):
+            if do_run:
+                time.sleep(2)
 

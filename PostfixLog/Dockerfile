@@ -17,6 +17,12 @@ COPY .conf/main.cf /etc/postfix/main.cf
 COPY .conf/master.cf /etc/postfix/master.cf
 
 RUN mkdir -p /app/logs
+RUN mkdir -p /app/cache
+RUN mkdir -p /app/postfixlog
+
+COPY cache /app/cache
+COPY postfixlog /app/postfixlog
+COPY *.py /app/
 
 COPY requirements.txt requirements.txt
 
@@ -25,9 +31,4 @@ RUN chmod 755 /app/startscript.sh
 
 RUN pip3 install -r requirements.txt
 
-COPY . .
-
-# Need to start/restart postfix?
-
 CMD [ "/bin/bash", "startscript.sh"]
-

@@ -14,7 +14,7 @@ do_run = True
 def signal_handler(sig, frame):
     global do_run
     do_run = False
-    logging.info("SIGINT handler")
+    logging.info("Poller: SIGINT/SIGQUIT handler")
 
 
 def get_arg_parse_object():
@@ -25,11 +25,17 @@ def get_arg_parse_object():
 
 
 if __name__ == "__main__":
-    args = get_arg_parse_object()
-    signal.signal(signal.SIGINT, signal_handler)
-
     logging.basicConfig(level=os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'),
-                        format='%(asctime)s - %(levelname)s - %(message)s')  # Loggername %(name)s   e.g 'root'
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGQUIT, signal_handler)
+
+    logging.info("Starting ReliableQueue poller")
+
+    os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_POSTFIX_POLLER_PID")
+
+    args = get_arg_parse_object()
 
     with open(args.global_config_file, 'r') as file:
         global_config = yaml.safe_load(file)
