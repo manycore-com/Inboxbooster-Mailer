@@ -54,7 +54,8 @@ class MessageQueueWriter(object):
                     priority = 1
             except Exception as ex:
                 priority = 1
-        return email_to, email_cc, email_from, ip, priority, parsed_email.get("Subject", "")
+        uuid = parsed_email.get("X-Uuid", "")
+        return email_to, email_cc, email_from, ip, priority, parsed_email.get("Subject", ""), uuid
 
     def run(self):
         logger.info("Starting Prometheus /metric on port 9090 from MultiProcessingQueue process")
@@ -63,13 +64,13 @@ class MessageQueueWriter(object):
             try:
                 smtp_data = self.queue.get()
                 parsed_email = message_from_bytes(smtp_data)
-                email_to, email_cc, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
+                email_to, email_cc, email_from, ip, priority, subject, uuid = MessageQueueWriter.parse_smtp_headers(parsed_email)
                 if 0 == priority:
                     self.prio_queue.push(smtp_data)
-                    logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " subject=" + subject)
+                    logger.info("Enqueued email to RQ: " + self.prio_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " cc=" + str(email_cc) + " uuid=" + str(uuid) + " subject=" + subject)
                 else:
                     self.default_queue.push(smtp_data)
-                    logger.info("Enqueued email to RQ: " + self.default_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " subject=" + subject)
+                    logger.info("Enqueued email to RQ: " + self.default_queue._queue_name + " prio=" + str(priority) + " from=" + str(email_from) + " to=" + str(email_to) + " cc=" + str(email_cc) + " uuid=" + str(uuid) + " subject=" + subject)
                 NBR_EMAILS_ENQUEUED_TOTAL.inc()
                 NBR_RECIPIENTS_TOTAL.inc(len(email_to) + len(email_cc))
             except Exception as e:
