@@ -29,6 +29,7 @@ RUN chmod 755 /app/startscript.sh
 
 COPY startup_preparations.py startup_preparations.py
 COPY configuration_check.py configuration_check.py
+COPY prometheus_datasource.py prometheus_datasource.py
 COPY shutdown.py shutdown.py
 
 CMD [ "/bin/sh", "startscript.sh"]

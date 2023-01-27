@@ -4,6 +4,10 @@
 #  --from-file inboxbooster-mailer-customer.yaml \
 #  --from-file inboxbooster-mailer-global.yaml
 
+# minicube tests. First line overrides docker repo to minicube.
+# eval $(minikube -p minikube docker-env)
+# docker build -t inboxbooster/redis:latest .
+
 apiVersion: v1
 kind: Pod
 metadata:
@@ -12,11 +16,14 @@ metadata:
     app: redis
 spec:
   containers:
-    - name: test
+    - name: redis
       image: inboxbooster/redis:latest
       imagePullPolicy: Always
       ports:
         - containerPort: 6379
+          name: redis
+        - containerPort: 9090
+          name: prometheus
       volumeMounts:
         - name: configs
           mountPath: "/configs"

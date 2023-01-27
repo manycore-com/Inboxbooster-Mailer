@@ -69,5 +69,4 @@ if __name__ == "__main__":
         download_key_to_file(s3, conf_obj["bucket"], "dump.rdb", "/app/dump.rdb")
         os.system("mv /app/dump.rdb /var/lib/redis/dump.rdb")
         os.system("chown redis.redis /var/lib/redis/dump.rdb")
-        delete_object(conf_obj["bucket"], "dump.rdb", aws_auth=aws_auth)
-
+        delete_object(s3, conf_obj["bucket"], "dump.rdb")

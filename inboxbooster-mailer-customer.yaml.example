@@ -73,6 +73,11 @@ postfixlog:
     # run test_dummy_postfix.sh to have a dummy responder for test.
     hostname: localhost
     port: 8026
+redis:
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
 common-config:
   object-storage:
     type: s3
