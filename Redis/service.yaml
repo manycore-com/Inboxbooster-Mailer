@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: redis
   labels:
-    app.kubernetes.io/name: receiver
+    app.kubernetes.io/name: redis
     environment: production
 spec:
   ports:
