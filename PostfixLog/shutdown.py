@@ -5,6 +5,7 @@ import subprocess
 import argparse
 import logging
 import yaml
+import glob
 from email import message_from_bytes
 from reliable_queue import ReliableQueue
 
@@ -69,31 +70,32 @@ def extract_eml_file(queue_filename, eml_filename):
 
 def push_messages_to_rq(rq: ReliableQueue, postfix_dir: str):
     tmp_eml_file = "/tmp/shutdown_temporary.eml"
-    for subdir in ["incoming", "active", "deferred", "maildrop"]:
+    for subdir in ["incoming", "active", "deferred", "maildrop", "corrupt", "hold"]:
         directory_to_scan = postfix_dir + "/" + subdir
         logging.info("Scanning for Postfix queue files in " + directory_to_scan)
         if os.path.isdir(directory_to_scan):
-            for filename in os.listdir(directory_to_scan):
-                envelope_records = get_envelope_records(directory_to_scan + "/" + filename)
-                if envelope_records is not None:
-                    if os.path.isfile(tmp_eml_file):
-                        os.remove(tmp_eml_file)
-                    if extract_eml_file(directory_to_scan + "/" + filename, tmp_eml_file):
-                        with open(tmp_eml_file, mode="rb") as eml_file:
-                            contents = eml_file.read()
-                        message = message_from_bytes(contents)
-                        # These two special headers are picked up by poll_from_reliable_queue.py already.
-                        if "X-ReturnPathIb" in message:
-                            logging.warning("shutdown: found X-ReturnPathIb header in queued message")
-                            del message["X-ReturnPathIb"]
-                        message["X-ReturnPathIb"] = envelope_records.sender
-                        # X-RecipientIb
-                        if "X-RecipientIb" in message:
-                            logging.warning("shutdown: found X-RecipientIb header in queued message")
-                            del message["X-RecipientIb"]
-                        message["X-RecipientIb"] = envelope_records.recipient
-                        logging.info("Pushing to postfix queue " + rq.get_queue_name() + " " + str(envelope_records))
-                        rq.push(message.as_bytes())
+            for filename in glob.glob(directory_to_scan + "/**/*", recursive=True):
+                if os.path.isfile(filename):
+                    envelope_records = get_envelope_records(directory_to_scan + "/" + filename)
+                    if envelope_records is not None:
+                        if os.path.isfile(tmp_eml_file):
+                            os.remove(tmp_eml_file)
+                        if extract_eml_file(directory_to_scan + "/" + filename, tmp_eml_file):
+                            with open(tmp_eml_file, mode="rb") as eml_file:
+                                contents = eml_file.read()
+                            message = message_from_bytes(contents)
+                            # These two special headers are picked up by poll_from_reliable_queue.py already.
+                            if "X-ReturnPathIb" in message:
+                                logging.warning("shutdown: found X-ReturnPathIb header in queued message")
+                                del message["X-ReturnPathIb"]
+                            message["X-ReturnPathIb"] = envelope_records.sender
+                            # X-RecipientIb
+                            if "X-RecipientIb" in message:
+                                logging.warning("shutdown: found X-RecipientIb header in queued message")
+                                del message["X-RecipientIb"]
+                            message["X-RecipientIb"] = envelope_records.recipient
+                            logging.info("Pushing to postfix queue " + rq.get_queue_name() + " " + str(envelope_records))
+                            rq.push(message.as_bytes())
         else:
             logging.warning("shutdown: Odd, missing directory " + directory_to_scan)
 

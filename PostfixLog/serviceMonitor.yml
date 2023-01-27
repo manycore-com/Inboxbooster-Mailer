@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postfix
+  namespace: default
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: 30s
+    path: "/metrics"
+    targetPort: 9090
+    metricRelabelings:
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    # List of labels identifying your service
+    matchLabels:
+      app.kubernetes.io/name: postfix
+      environment: production
