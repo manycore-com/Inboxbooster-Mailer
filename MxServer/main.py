@@ -6,6 +6,7 @@ import signal
 from aiosmtpd.controller import Controller
 from mxserver import SmtpdHandler
 import yaml
+from prometheus import start
 
 
 do_run = True
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGQUIT, signal_handler)
 
     logging.info("Starting Log Analyzer")
+    start()
 
     os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_MXSERVER_PID")
 

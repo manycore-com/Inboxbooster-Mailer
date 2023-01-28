@@ -6,6 +6,7 @@ import multiprocessing
 from email.utils import parseaddr, getaddresses
 from email.message import Message
 from email import message_from_bytes
+from prometheus import MXSERVER_RECEIVED_EMAIL
 
 
 class MessageQueueWriter(object):
@@ -41,16 +42,20 @@ class MessageQueueWriter(object):
     def run(self):
         time.sleep(1)
         while True:
-            smtp_data = self.queue.get()
-            parsed_email = message_from_bytes(smtp_data)  # type: Message
-            email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
-            self.counter += 1
-            filename = self.destination_directory + \
-                       datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S ') + str(self.counter) + '.eml'
-            logging.info("creating file name=" + str(filename) + " from=" + str(email_from) +
-                         " to=" + str(email_to) + " subject=" + subject)
-            with open(filename, "wb") as keyfile:
-                keyfile.write(parsed_email.as_bytes())
+            try:
+                smtp_data = self.queue.get()
+                parsed_email = message_from_bytes(smtp_data)  # type: Message
+                email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
+                self.counter += 1
+                filename = self.destination_directory + \
+                           datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S ') + str(self.counter) + '.eml'
+                logging.info("creating file name=" + str(filename) + " from=" + str(email_from) +
+                             " to=" + str(email_to) + " subject=" + subject)
+                MXSERVER_RECEIVED_EMAIL.inc()
+                with open(filename, "wb") as keyfile:
+                    keyfile.write(parsed_email.as_bytes())
+            except Exception as ex:
+                logging.error("MxServer.MessageQueueWriter.run() " + str(ex))
 
     def kill_worker(self):
         logging.info("MessageQueueWriter.kill_worker() called")

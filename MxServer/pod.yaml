@@ -8,14 +8,16 @@ metadata:
 spec:
   containers:
     - name: mxserver
-      image: inboxbooster/mxserver
+      image: inboxbooster/mxserver:latest
+      imagePullPolicy: Always
       ports:
         - containerPort: 25
+        - containerPort: 9090
+          name: prometheus
       volumeMounts:
         - name: configs
           mountPath: "/configs"
           readOnly: true
-      imagePullPolicy: Always
       lifecycle:
         preStop:
           exec:
