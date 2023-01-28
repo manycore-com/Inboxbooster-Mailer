@@ -8,12 +8,15 @@ metadata:
 spec:
   containers:
     - name: transformer
-      image: inboxbooster/transformer
+      image: inboxbooster/transformer:latest
+      imagePullPolicy: Always
+      ports:
+        - containerPort: 9090
+          name: prometheus
       volumeMounts:
         - name: configs
           mountPath: "/configs"
           readOnly: true
-      imagePullPolicy: Always
       lifecycle:
         preStop:
           exec:

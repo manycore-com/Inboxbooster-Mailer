@@ -14,10 +14,13 @@ RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /app/logs
 RUN mkdir -p /app/transformer
+RUN mkdir -p /app/prometheus
 
 COPY transformer /app/transformer
+COPY prometheus /app/prometheus
 COPY *.py /app/
 
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_RECEIVER
 ENV PYTHONUNBUFFERED=1
 CMD [ "python3", "main.py", \
   "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \

@@ -6,6 +6,7 @@ import signal
 from reliable_queue import ReliableQueue
 from transformer import Transformer
 import logging
+from prometheus import start
 
 
 transformerObject = None
@@ -31,6 +32,7 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     logging.info("Starting Transformer...")
+    start()
 
     os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_TRANSFORMER_PID")
 

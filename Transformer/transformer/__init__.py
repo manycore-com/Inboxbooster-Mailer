@@ -9,6 +9,7 @@ from email.utils import getaddresses, parseaddr
 from email import message_from_bytes
 import dkim
 from reliable_queue import ReliableQueue
+from prometheus import TRANSFORMER_PUSHED_TOTAL, TRANSFORMER_POLLED_PRIMARY_TOTAL, TRANSFORMER_POLLED_DEFAULT_TOTAL
 
 """
 Adds Message-ID header
@@ -62,12 +63,14 @@ class Transformer:
                 if msg is None:
                     break
                 any = True
+                TRANSFORMER_POLLED_PRIMARY_TOTAL.inc()
                 self.transform(msg)
             while not self.default_queue.is_ram_empty():  # todo, check if prio queue has more messages
                 msg = self.default_queue.blocking_pop(1)
                 if msg is None:
                     break
                 any = True
+                TRANSFORMER_POLLED_DEFAULT_TOTAL.inc()
                 self.transform(msg)
                 if not self.prio_queue.is_ram_empty():
                     break
@@ -134,6 +137,7 @@ class Transformer:
 
             logging.info("Pushing to postfix queue " + self.queue_to_postfix.get_queue_name())
             self.queue_to_postfix.push(parsed_email.as_bytes())
+            TRANSFORMER_PUSHED_TOTAL.inc()
 
             #client = Client(self.postfix_hostname, self.postfix_port)
             #return_path = "bounce-" + uuid + "@" + return_path_domain

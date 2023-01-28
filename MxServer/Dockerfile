@@ -9,11 +9,14 @@ FROM python:3.10-bullseye
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
-
 RUN pip3 install -r requirements.txt
-RUN mkdir -p /app/logs
 
-COPY . .
+RUN mkdir -p /app/logs
+RUN mkdir -p /app/tmp
+RUN mkdir -p /app/mxserver
+
+COPY mxserver /app/mxserver
+COPY *.py /app/
 
 ENV PYTHONUNBUFFERED=1
 

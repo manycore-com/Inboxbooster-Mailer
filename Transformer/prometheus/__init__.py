@@ -10,7 +10,7 @@ os.mkdir(prome_stats)
 
 TRANSFORMER_POLLED_PRIMARY_TOTAL = Counter('transformer_polled_primary', 'Number of emails received from Receiver on priority queue.')
 TRANSFORMER_POLLED_DEFAULT_TOTAL = Counter('transformer_polled_default', 'Number of emails received from Receiver on default queue.')
-TRANSFORMER_PUSHED_TOTAL = Counter('transformer_polled', 'Number of emails pushed to postfix queue')
+TRANSFORMER_PUSHED_TOTAL = Counter('transformer_pushed', 'Number of emails pushed to postfix queue')
 
 registry = CollectorRegistry()
 multiprocess.MultiProcessCollector(registry)

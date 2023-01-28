@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_RECEIVER
 python \
   main.py \
   --global-config-file=../inboxbooster-mailer-global.yaml.example \
