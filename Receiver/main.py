@@ -93,8 +93,6 @@ if __name__ == "__main__":
     logging.info("Starting Prometheus endpoint")
     start()
 
-    NBR_EMAILS_ENQUEUED_TOTAL.inc()
-
     logging.info("Starting Receiver on " + bind_address + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 
     smtpd_handler = SmtpdHandler(prio_queue, default_queue, event_queue)
