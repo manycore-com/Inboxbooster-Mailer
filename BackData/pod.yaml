@@ -10,7 +10,7 @@ metadata:
 spec:
   containers:
     - name: backdata
-      image: inboxbooster/backdata
+      image: inboxbooster/backdata:latest
       ports:
         - containerPort: 9090
       volumeMounts:

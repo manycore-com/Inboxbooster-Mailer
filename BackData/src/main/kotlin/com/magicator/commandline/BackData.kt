@@ -38,7 +38,7 @@ class BackData {
     fun execute() {
         var anyException = false
         while (true) {
-            var events: List<ByteArray>? = null
+            var events: List<ByteArray>?
             try {
                 if (null == reliableQueue) {
                     Logger.info("JedisException raised, reconnecting to Redis.")
@@ -49,7 +49,7 @@ class BackData {
                 val payload: String? = if (events == null) {
                     null
                 } else if (events.size == 1) {
-                    "[" + String(events!![0], Charsets.UTF_8) + "]"
+                    "[" + String(events[0], Charsets.UTF_8) + "]"
                 } else {
                     val list = mutableListOf<String>()
                     events.forEach() {
@@ -88,10 +88,16 @@ class BackData {
                         .POST(HttpRequest.BodyPublishers.ofByteArray(payload.encodeToByteArray()))
                         .build()
                     // ConnectException if target does not exist
-                    val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-                    Logger.info("Response: $response")
+                    var response: HttpResponse<String>?
+                    try {
+                        PrometheusFeeder.numberOfEventsCurrentlyPosting.inc(events!!.size.toDouble())
+                        response = client.send(request, HttpResponse.BodyHandlers.ofString())
+                        Logger.info("Response: $response")
+                    } finally {
+                        PrometheusFeeder.numberOfEventsCurrentlyPosting.dec(events!!.size.toDouble())
+                    }
                     // TODO differentiate between 4xx and 5xx
-                    if (400 <= response.statusCode()) {
+                    if (400 <= response!!.statusCode()) {
                         throw EventPostError(
                             "Failed to post events. status=" + response.statusCode(),
                             response.statusCode()

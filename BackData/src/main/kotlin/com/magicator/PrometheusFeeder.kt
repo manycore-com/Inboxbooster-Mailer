@@ -1,6 +1,7 @@
 package com.magicator
 
 import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
 
@@ -30,6 +31,10 @@ class PrometheusFeeder {
         val malformedEventsCounter = Counter.build()
             .name("malformed_events_total")
             .help("Number of malformed events").register()
+
+        val numberOfEventsCurrentlyPosting = Gauge.build()
+            .name("number_of_events_currently_posting")
+            .help("Number of events currently being posted.").register()
 
         var server: HTTPServer? = null
 
