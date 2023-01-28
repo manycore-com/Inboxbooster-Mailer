@@ -20,7 +20,7 @@ COPY transformer /app/transformer
 COPY prometheus /app/prometheus
 COPY *.py /app/
 
-ENV PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_RECEIVER
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_TRANSFORMER
 ENV PYTHONUNBUFFERED=1
 CMD [ "python3", "main.py", \
   "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \
