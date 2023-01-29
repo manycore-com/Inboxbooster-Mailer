@@ -102,6 +102,8 @@ class BackData {
                             "Failed to post events. status=" + response.statusCode(),
                             response.statusCode()
                         )
+                    } else {
+                        PrometheusFeeder.successfullyPushedEventsCounter.inc(events!!.size.toDouble())
                     }
                 }
 

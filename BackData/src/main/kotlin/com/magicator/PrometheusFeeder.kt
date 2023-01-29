@@ -8,6 +8,10 @@ import io.prometheus.client.hotspot.DefaultExports
 class PrometheusFeeder {
 
     companion object {
+
+        // Note: If you add more event types, please update Prometheus Dashboard to measure Backdata pull
+        // throughput properly.
+
         val deliveredEventsCounter = Counter.build()
             .name("delivered_events_total")
             .help("Number of delivered events").register()
@@ -35,6 +39,10 @@ class PrometheusFeeder {
         val numberOfEventsCurrentlyPosting = Gauge.build()
             .name("number_of_events_currently_posting")
             .help("Number of events currently being posted.").register()
+
+        val successfullyPushedEventsCounter = Counter.build()
+            .name("successfully_pushed_events_total")
+            .help("Number of events successfully posted to listener").register()
 
         var server: HTTPServer? = null
 
