@@ -41,11 +41,6 @@ fun Routing.setupMailSendRoute() {
                 throw BadRequestException("Bad Request: incorrect content type '$requestContentType', expected '${Application.OctetStream}'")
             }
 
-            val requestContentLength = call.request.contentLength()
-            if (requestContentLength == null || requestContentLength == 0L) {
-                throw BadRequestException("Bad Request: missing or null content length")
-            }
-
             val message = try {
                 withContext(IO) {
                     MimeMessage(call.receiveChannel())
