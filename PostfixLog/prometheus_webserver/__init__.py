@@ -1,12 +1,15 @@
+from multiprocessing import Process, Value
 import os
-import sys
-import argparse
+import signal
 import logging
-import yaml
 import glob
 from flask import Flask, make_response
 
 app = Flask(__name__)
+postfix_emails_polled_total = Value('i', 0)
+postfix_emails_to_postfix_total = Value('i', 0)
+
+process = None
 
 
 def metrics_data():
@@ -25,6 +28,14 @@ def metrics_data():
             logging.warning("shutdown: Odd, missing directory " + directory_to_scan)
         ret.append("postfix_" + subdir + "_queue_messages " + str(0.0 + files_found))
 
+    global postfix_emails_polled_total
+    with postfix_emails_polled_total.get_lock():
+        ret.append('postfix_emails_polled_total ' + str(0.0 + postfix_emails_polled_total.value))
+
+    global postfix_emails_to_postfix_total
+    with postfix_emails_to_postfix_total.get_lock():
+        ret.append('postfix_emails_to_postfix_total ' + str(0.0 + postfix_emails_to_postfix_total.value))
+
     response = make_response("\n".join(ret) + "\n", 200)
     response.mimetype = "text/plain"
     return response
@@ -40,29 +51,24 @@ def metric():
     return metrics_data()
 
 
-# python3 prometheus_datasource.py --global-config-file=../../DoNotCheckIn/configForDev/inboxbooster-mailer-global.yaml --customer-config-file=../../DoNotCheckIn/configForDev/inboxbooster-mailer-customer.yaml
-def get_arg_parse_object(args):
-    parser = argparse.ArgumentParser(description="Redis2")
-    parser.add_argument('--global-config-file', type=str, help="Based on inboxbooster-mailer-global.yaml.example", required=True)
-    parser.add_argument('--customer-config-file', type=str, help="Based on inboxbooster-mailer-customer.yaml.example", required=True)
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = get_arg_parse_object(sys.argv[1:])
-
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-    logging.getLogger().setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
-
-    with open(args.global_config_file, 'r') as file:
-        global_config = yaml.safe_load(file)  # dict
-
-    with open(args.customer_config_file, 'r') as file:
-        customer_config = yaml.safe_load(file)  # dict
-
+def run(a):
+    global app
     app.run(
         host="0.0.0.0",
         port=9090,
         debug=False
     )
 
+
+def start_prometheus_endpoint():
+    global process
+    process = Process(target=run, args=(1,))
+    process.start()
+
+
+def stop_prometheus_endpoint():
+    global process  # type: Process
+    if process is not None:
+        os.kill(process.pid, signal.SIGINT)
+        process.join()
+        process = None

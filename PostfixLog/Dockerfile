@@ -19,9 +19,11 @@ COPY .conf/master.cf /etc/postfix/master.cf
 RUN mkdir -p /app/logs
 RUN mkdir -p /app/cache
 RUN mkdir -p /app/postfixlog
+RUN mkdir -p /app/prometheus_webserver
 
 COPY cache /app/cache
 COPY postfixlog /app/postfixlog
+COPY prometheus_webserver /app/prometheus_webserver
 COPY *.py /app/
 
 COPY requirements.txt requirements.txt

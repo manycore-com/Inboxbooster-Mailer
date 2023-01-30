@@ -7,6 +7,7 @@ from email import message_from_bytes
 from smtplib import SMTP as Client
 from reliable_queue import ReliableQueue
 from email.utils import getaddresses, parseaddr
+from prometheus_webserver import start_prometheus_endpoint, stop_prometheus_endpoint, postfix_emails_polled_total, postfix_emails_to_postfix_total
 
 do_run = True
 
@@ -43,6 +44,9 @@ if __name__ == "__main__":
     with open(args.customer_config_file, 'r') as file:
         customer_config = yaml.safe_load(file)
 
+    logging.info("Starting Prometheus Endpoint")
+    start_prometheus_endpoint()
+
     event_queue_name = global_config["postfix"]["incoming-queue-name"]
     rq_redis_host = customer_config["postfixlog"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["postfixlog"]["reliable-queue"]["redis"]["port"])
@@ -64,6 +68,8 @@ if __name__ == "__main__":
                 return_path = None
                 msg = incoming_queue.blocking_pop(3)
                 if msg is not None:
+                    with postfix_emails_polled_total.get_lock():
+                        postfix_emails_polled_total.value += 1
                     parsed_email = message_from_bytes(msg)  # type: Message
                     from_address = parseaddr(parsed_email.get("From"))[1]
                     from_address_domain = from_address.split('@')[1].lower()
@@ -92,6 +98,8 @@ if __name__ == "__main__":
                             for addr_tuple in getaddresses(parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                                 rcpt_to = addr_tuple[1]
                                 client.sendmail(return_path, [rcpt_to], message_as_bytes)
+                        with postfix_emails_to_postfix_total.get_lock():
+                            postfix_emails_to_postfix_total.value += 1
                     else:
                         logging.error("Missing X-ReturnPathIb: from=" + str(from_address) + " to=" + str(email_to) +
                                       " MessageID=" + str(message_id) +
@@ -111,3 +119,4 @@ if __name__ == "__main__":
                         logging.error(ex, exc_info=True, stack_info=True)
     except KeyboardInterrupt as e:
         logging.info("Got keyboard interrupt.")
+        stop_prometheus_endpoint()
