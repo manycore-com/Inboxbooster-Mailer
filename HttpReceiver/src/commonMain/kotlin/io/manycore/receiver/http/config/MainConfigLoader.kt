@@ -40,11 +40,11 @@ object MainConfigLoader {
 
     fun loadConfig(globalConfig: YamlMap, customerConfig: YamlMap): Config =
         Config(
-            appHost = customerConfig.getPathAsStringOrFail("receiver.bind.inet-interface"),
-            appPort = customerConfig.getPathAsIntOrFail("receiver.bind.inet-port"),
+            appHost = customerConfig.getPathAsStringOrFail("httpreceiver.bind.inet-interface"),
+            appPort = customerConfig.getPathAsIntOrFail("httpreceiver.bind.inet-port"),
             acceptedCredentials = readAcceptedCredentials(customerConfig),
-            redisHost = customerConfig.getPathAsStringOrFail("receiver.reliable-queue.redis.hostname"),
-            redisPort = customerConfig.getPathAsIntOrFail("receiver.reliable-queue.redis.port"),
+            redisHost = customerConfig.getPathAsStringOrFail("httpreceiver.reliable-queue.redis.hostname"),
+            redisPort = customerConfig.getPathAsIntOrFail("httpreceiver.reliable-queue.redis.port"),
             priorityQueueName = globalConfig.getPathAsStringOrFail("reliable-queue.queue-names.primary-queue"),
             defaultQueueName = globalConfig.getPathAsStringOrFail("reliable-queue.queue-names.default-queue"),
             eventQueueName = globalConfig.getPathAsStringOrFail("backdata.queue-name"),
@@ -103,20 +103,20 @@ object MainConfigLoader {
     }
 
     private fun readAcceptedCredentials(customerConfig: YamlMap): List<Pair<String, String>> {
-        val authLogins = customerConfig.getPath("receiver.auth-logins")
-            ?: failWithInvalidConfigField("receiver.auth-logins")
+        val authLogins = customerConfig.getPath("httpreceiver.auth-logins")
+            ?: failWithInvalidConfigField("httpreceiver.auth-logins")
         if (authLogins !is YamlList || authLogins.any { it !is YamlMap }) {
-            failWithInvalidConfigField("receiver.auth-logins", cause = "should be a list of objects")
+            failWithInvalidConfigField("httpreceiver.auth-logins", cause = "should be a list of objects")
         }
         return authLogins.map {
             val element = it as YamlMap
             val username = element["username"]
             if (username == null || username !is YamlLiteral) {
-                failWithInvalidConfigField("receiver.auth-logins", cause = "objects should contain field 'username'")
+                failWithInvalidConfigField("httpreceiver.auth-logins", cause = "objects should contain field 'username'")
             }
             val password = element["password"]
             if (password == null || password !is YamlLiteral) {
-                failWithInvalidConfigField("receiver.auth-logins", cause = "objects should contain field 'password'")
+                failWithInvalidConfigField("httpreceiver.auth-logins", cause = "objects should contain field 'password'")
             }
             return@map username.content to password.content
         }

@@ -1,4 +1,4 @@
-receiver:
+httpreceiver:
   bind:
     inet-interface: localhost
     inet-port: 8080
