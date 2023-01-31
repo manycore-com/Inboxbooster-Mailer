@@ -9,11 +9,22 @@ open class HttpException(val status: HttpStatusCode, message: String? = null, ca
     if (message == null) status.toString() else "$status: $message", cause,
 )
 
-class BadRequestException(message: String = "Bad Request", cause: Throwable? = null) :
-    HttpException(HttpStatusCode.BadRequest, message, cause)
+class BadRequestException(
+    message: String = HttpStatusCode.BadRequest.description,
+    cause: Throwable? = null,
+) : HttpException(HttpStatusCode.BadRequest, message, cause)
 
-class InternalServerError(message: String = "Internal Server Error", cause: Throwable? = null) :
-    HttpException(HttpStatusCode.InternalServerError, message, cause)
+class ForbiddenException(
+    message: String = HttpStatusCode.Forbidden.description,
+    cause: Throwable? = null,
+) : HttpException(HttpStatusCode.Forbidden, message, cause)
 
-class ServiceUnavailableException(message: String = "Service Unavailable", cause: Throwable? = null) :
-    HttpException(HttpStatusCode.ServiceUnavailable, message, cause)
+class InternalServerError(
+    message: String = HttpStatusCode.InternalServerError.description,
+    cause: Throwable? = null,
+) : HttpException(HttpStatusCode.InternalServerError, message, cause)
+
+class ServiceUnavailableException(
+    message: String = HttpStatusCode.ServiceUnavailable.description,
+    cause: Throwable? = null,
+) : HttpException(HttpStatusCode.ServiceUnavailable, message, cause)

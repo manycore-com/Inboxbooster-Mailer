@@ -8,7 +8,8 @@ val testConfigModule = module {
     single {
         Config(
             appHost = "localhost",
-            appPort = 80,
+            appPort = 8080,
+            appMetricsPort = 9090,
             acceptedCredentials = listOf("admin" to "secret"),
             redisHost = "localhost",
             redisPort = 6379,
