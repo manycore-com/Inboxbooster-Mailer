@@ -6,6 +6,7 @@ import signal
 from aiosmtpd.controller import Controller
 from mxserver import SmtpdHandler
 import yaml
+from reliable_queue import ReliableQueue
 from prometheus import start
 
 
@@ -45,6 +46,10 @@ if __name__ == "__main__":
     with open(args.customer_config_file, 'r') as file:
         customer_config = yaml.safe_load(file)  # dict
 
+    rq_redis_host = customer_config["mxserver"]["reliable-queue"]["redis"]["hostname"]
+    rq_redis_port = int(customer_config["mxserver"]["reliable-queue"]["redis"]["port"])
+    event_queue_name = global_config["backdata"]["queue-name"]
+
     eml_directory = customer_config["mxserver"]["eml-directory"]
 
     bind_address = customer_config["mxserver"]["bind"]["inet-interface"]
@@ -55,7 +60,7 @@ if __name__ == "__main__":
 
     logging.info("Starting MxServer on " + bind_address + ":" + str(port))
 
-    smtpd_handler = SmtpdHandler(eml_directory)
+    smtpd_handler = SmtpdHandler(eml_directory, event_queue_name, rq_redis_host, rq_redis_port)
     try:
         controller = Controller(
             smtpd_handler,

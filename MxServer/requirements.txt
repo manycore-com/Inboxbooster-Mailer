@@ -1,6 +1,9 @@
 aiosmtpd==1.4.2
+async-timeout==4.0.2
 atpublic==3.1.1
 attrs==22.1.0
 certifi==2022.9.24
 prometheus-client==0.15.0
 PyYAML==6.0
+redis==4.4.2
+reliable-queue==0.0.9
