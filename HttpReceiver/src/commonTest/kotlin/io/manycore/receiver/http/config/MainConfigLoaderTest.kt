@@ -13,6 +13,7 @@ class MainConfigLoaderTest {
         val config = MainConfigLoader.loadConfig(globalConfigContent, customerConfigContent)
         assertEquals("localhost", config.appHost)
         assertEquals(8080, config.appPort)
+        assertEquals(9090, config.appMetricsPort)
         assertEquals(listOf("admin" to "secret"), config.acceptedCredentials)
         assertEquals("localhost", config.redisHost)
         assertEquals(6379, config.redisPort)

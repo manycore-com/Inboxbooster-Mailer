@@ -42,6 +42,7 @@ object MainConfigLoader {
         Config(
             appHost = customerConfig.getPathAsStringOrFail("httpreceiver.bind.inet-interface"),
             appPort = customerConfig.getPathAsIntOrFail("httpreceiver.bind.inet-port"),
+            appMetricsPort = customerConfig.getPathAsIntOrFail("httpreceiver.bind.inet-port-metrics"),
             acceptedCredentials = readAcceptedCredentials(customerConfig),
             redisHost = customerConfig.getPathAsStringOrFail("httpreceiver.reliable-queue.redis.hostname"),
             redisPort = customerConfig.getPathAsIntOrFail("httpreceiver.reliable-queue.redis.port"),
@@ -112,11 +113,17 @@ object MainConfigLoader {
             val element = it as YamlMap
             val username = element["username"]
             if (username == null || username !is YamlLiteral) {
-                failWithInvalidConfigField("httpreceiver.auth-logins", cause = "objects should contain field 'username'")
+                failWithInvalidConfigField(
+                    "httpreceiver.auth-logins",
+                    cause = "objects should contain field 'username'"
+                )
             }
             val password = element["password"]
             if (password == null || password !is YamlLiteral) {
-                failWithInvalidConfigField("httpreceiver.auth-logins", cause = "objects should contain field 'password'")
+                failWithInvalidConfigField(
+                    "httpreceiver.auth-logins",
+                    cause = "objects should contain field 'password'"
+                )
             }
             return@map username.content to password.content
         }

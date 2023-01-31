@@ -2,6 +2,7 @@ httpreceiver:
   bind:
     inet-interface: localhost
     inet-port: 8080
+    inet-port-metrics: 9090
   auth-logins:
     - username: admin
       password: secret

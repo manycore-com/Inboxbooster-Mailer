@@ -8,6 +8,8 @@ data class Config(
 
     val appPort: Int,
 
+    val appMetricsPort: Int,
+
     val acceptedCredentials: List<Pair<String, String>>,
 
     // Queues
