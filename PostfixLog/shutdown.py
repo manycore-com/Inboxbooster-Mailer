@@ -76,11 +76,11 @@ def push_messages_to_rq(rq: ReliableQueue, postfix_dir: str):
         if os.path.isdir(directory_to_scan):
             for filename in glob.glob(directory_to_scan + "/**/*", recursive=True):
                 if os.path.isfile(filename):
-                    envelope_records = get_envelope_records(directory_to_scan + "/" + filename)
+                    envelope_records = get_envelope_records(filename)
                     if envelope_records is not None:
                         if os.path.isfile(tmp_eml_file):
                             os.remove(tmp_eml_file)
-                        if extract_eml_file(directory_to_scan + "/" + filename, tmp_eml_file):
+                        if extract_eml_file(filename, tmp_eml_file):
                             with open(tmp_eml_file, mode="rb") as eml_file:
                                 contents = eml_file.read()
                             message = message_from_bytes(contents)

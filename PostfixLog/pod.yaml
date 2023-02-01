@@ -21,9 +21,9 @@ spec:
         preStop:
           exec:
             command: [
-              "python3", "/app/shutdown.py",
-              "--global-config-file=/configs/inboxbooster-mailer-global.yaml",
-              "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+              "/bin/sh",
+              "-c",
+              "python3 /app/shutdown.py --global-config-file=/configs/inboxbooster-mailer-global.yaml --customer-config-file=/configs/inboxbooster-mailer-customer.yaml > /proc/1/fd/1 2> /proc/1/fd/1"
             ]
   volumes:
     - name: configs

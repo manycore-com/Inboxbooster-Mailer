@@ -6,7 +6,6 @@ import signal
 from aiosmtpd.controller import Controller
 from mxserver import SmtpdHandler
 import yaml
-from reliable_queue import ReliableQueue
 from prometheus import start
 
 
