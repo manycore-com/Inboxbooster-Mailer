@@ -52,16 +52,19 @@ class MessageQueueWriter(object):
         while True:
             try:
                 self.counter += 1
-
+                sent_event = False
                 envelope = self.queue.get()  # type: Envelope
                 unsub_addr = None
-                for rt in envelope.rcpt_tos:
-                    x = parseaddr(rt)[1]
-                    if x.startswith('unsub-'):
-                        unsub_addr = x
 
-                if unsub_addr is not None:
-                    try:
+                # If it looks like a legit unsubscribe email, let's send it back as an event.
+                try:
+                    for rt in envelope.rcpt_tos:
+                        x = parseaddr(rt)[1]
+                        if x.startswith('unsub-'):
+                            unsub_addr = x
+
+                    # TODO Improve. Whitelisted domains? Extract domains from inboxbooster-mailer-customer.yaml?
+                    if unsub_addr is not None:
                         uuid_from_rcpt_to = unsub_addr.split('@')[0].split('-')[1]
                         event = {
                             "event": "unsubscribe",
@@ -69,19 +72,21 @@ class MessageQueueWriter(object):
                             "timestamp": int(time.time())
                         }
                         self.event_queue.push(json.dumps(event).encode("utf-8"))
-                        logging.info("Sending unsubscribe event (file counter " + str(self.counter) + "): " + json.dumps(event))
-                    except Exception as ex:
-                        logging.error("Failed to extract uuid from RCPT TO=" + str(unsub_addr) + " ex=" + str(ex))
+                        logging.info("Sending unsubscribe event. RCPT TO:" + str(unsub_addr) + " event=" + json.dumps(event))
+                        sent_event = True
+                except Exception as ex:
+                    logging.error("Failed to extract uuid from RCPT TO=" + str(unsub_addr) + " ex=" + str(ex))
 
-                smtp_data = envelope.original_content
-                parsed_email = message_from_bytes(smtp_data)  # type: Message
-                email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
-                filename = self.destination_directory + str(self.counter) + '.eml'
-                logging.info("creating file name=" + str(filename) + " from=" + str(email_from) +
-                             " to=" + str(email_to) + " subject=" + subject)
-                MXSERVER_RECEIVED_EMAIL.inc()
-                with open(filename, "wb") as keyfile:
-                    keyfile.write(parsed_email.as_bytes())
+                if not sent_event:
+                    smtp_data = envelope.original_content
+                    parsed_email = message_from_bytes(smtp_data)  # type: Message
+                    email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
+                    filename = self.destination_directory + str(self.counter) + '.eml'
+                    logging.info("creating file name=" + str(filename) + " from=" + str(email_from) +
+                                 " to=" + str(email_to) + " subject=" + subject)
+                    MXSERVER_RECEIVED_EMAIL.inc()
+                    with open(filename, "wb") as keyfile:
+                        keyfile.write(parsed_email.as_bytes())
             except Exception as ex:
                 logging.error("MxServer.MessageQueueWriter.run() " + str(ex))
 
