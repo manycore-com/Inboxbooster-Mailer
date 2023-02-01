@@ -98,6 +98,7 @@ class BackData {
                     }
                     // TODO differentiate between 4xx and 5xx
                     if (400 <= response!!.statusCode()) {
+                        PrometheusFeeder.failedPushedEventsCounter.inc(events!!.size.toDouble())
                         throw EventPostError(
                             "Failed to post events. status=" + response.statusCode(),
                             response.statusCode()

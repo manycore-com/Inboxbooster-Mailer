@@ -44,6 +44,10 @@ class PrometheusFeeder {
             .name("successfully_pushed_events_total")
             .help("Number of events successfully posted to listener").register()
 
+        val failedPushedEventsCounter = Counter.build()
+            .name("failed_pushed_events_total")
+            .help("Number of events that failed (got 400 / 500 response)").register()
+
         var server: HTTPServer? = null
 
         fun start(bindAddress: String, bindPort: Int) {
