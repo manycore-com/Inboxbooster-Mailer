@@ -8,7 +8,8 @@ if os.path.exists(prome_stats):
     shutil.rmtree(prome_stats)
 os.mkdir(prome_stats)
 
-MXSERVER_RECEIVED_EMAIL = Counter('mxserver_received_email', 'Total number of emails received.')
+MXSERVER_RECEIVED_UNSUBSCRIBE = Counter('mxserver_received_unsubscribe', 'Total number of unsubscribe emails received.')
+MXSERVER_RECEIVED_UNCLASSIFIED = Counter('mxserver_received_unclassified', 'Total number of unclassified emails received.')
 
 registry = CollectorRegistry()
 multiprocess.MultiProcessCollector(registry)

@@ -1,14 +1,13 @@
 import os
 import time
 import json
-import datetime
 import logging
 import multiprocessing
 from email.utils import parseaddr, getaddresses
 from aiosmtpd.smtp import Envelope
 from email.message import Message
 from email import message_from_bytes
-from prometheus import MXSERVER_RECEIVED_EMAIL
+from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED
 from reliable_queue import ReliableQueue
 
 
@@ -74,17 +73,18 @@ class MessageQueueWriter(object):
                         self.event_queue.push(json.dumps(event).encode("utf-8"))
                         logging.info("Sending unsubscribe event. RCPT TO:" + str(unsub_addr) + " event=" + json.dumps(event))
                         sent_event = True
+                        MXSERVER_RECEIVED_UNSUBSCRIBE.inc()
                 except Exception as ex:
                     logging.error("Failed to extract uuid from RCPT TO=" + str(unsub_addr) + " ex=" + str(ex))
 
                 if not sent_event:
+                    MXSERVER_RECEIVED_UNCLASSIFIED.inc()
                     smtp_data = envelope.original_content
                     parsed_email = message_from_bytes(smtp_data)  # type: Message
                     email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
                     filename = self.destination_directory + str(self.counter) + '.eml'
                     logging.info("creating file name=" + str(filename) + " from=" + str(email_from) +
                                  " to=" + str(email_to) + " subject=" + subject)
-                    MXSERVER_RECEIVED_EMAIL.inc()
                     with open(filename, "wb") as keyfile:
                         keyfile.write(parsed_email.as_bytes())
             except Exception as ex:
