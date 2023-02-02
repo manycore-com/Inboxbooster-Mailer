@@ -11,6 +11,7 @@ RUN apt-get update \
   && apt-get -qq -y install syslog-ng \
   && apt-get -qq -y install python3 \
   && apt-get -qq -y install python3-pip \
+  && apt-get -qq -y install psmisc \
   && apt-get clean
 
 COPY .conf/main.cf /etc/postfix/main.cf

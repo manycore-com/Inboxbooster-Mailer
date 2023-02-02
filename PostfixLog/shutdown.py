@@ -134,10 +134,4 @@ if __name__ == "__main__":
     push_messages_to_rq(rq, "/var/spool/postfix")
 
     logging.info("Sending SIGQUIT to Log Analyzer")
-    if os.path.isfile('/tmp/INBOXBOOSTER_POSTFIX_LOGANALYZER_PID'):
-        with open('/tmp/INBOXBOOSTER_POSTFIX_LOGANALYZER_PID', 'r') as content_file:
-            content = content_file.read()
-            receiver_pid = int(content.strip())
-            os.kill(receiver_pid, signal.SIGQUIT)
-    else:
-        logging.warning("Missing pid file for poller: /tmp/INBOXBOOSTER_POSTFIX_LOGANALYZER_PID")
+    os.system("killall tail")
