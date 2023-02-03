@@ -85,7 +85,8 @@ if __name__ == "__main__":
         domain_configuration[domain_data["domain"]] = {
             "dkim_private_key": dkim_private_key,
             "return-path-domain": domain_data["return-path-domain"],
-            "selector": domain_data.get("selector", "mailer")
+            "selector": domain_data.get("selector", "mailer"),
+            "beacon-url": domain_data.get("beacon-url", None)
         }
 
     beacon_url = None  # args.beacon_url

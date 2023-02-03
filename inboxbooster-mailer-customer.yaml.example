@@ -17,6 +17,7 @@ transformer:
      dkim-private-key-file: ../../../cert/dkim-test-private.key
      return-path-domain: example.com
      selector: mailer
+     beacon-url: "http://localhost:8090/abc/{{ stream-id }}.gif"
    - domain: bexample.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
      return-path-domain: example.com

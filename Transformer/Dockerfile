@@ -15,9 +15,11 @@ RUN pip3 install -r requirements.txt
 RUN mkdir -p /app/logs
 RUN mkdir -p /app/transformer
 RUN mkdir -p /app/prometheus
+RUN mkdir -p /app/injector
 
 COPY transformer /app/transformer
 COPY prometheus /app/prometheus
+COPY injector /app/injector
 COPY *.py /app/
 
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_TRANSFORMER

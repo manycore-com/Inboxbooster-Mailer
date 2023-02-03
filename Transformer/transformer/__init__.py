@@ -10,6 +10,7 @@ from email import message_from_bytes
 import dkim
 from reliable_queue import ReliableQueue
 from prometheus import TRANSFORMER_PUSHED_TOTAL, TRANSFORMER_POLLED_PRIMARY_TOTAL, TRANSFORMER_POLLED_DEFAULT_TOTAL
+from injector import injector_inject_beacon
 
 """
 Adds Message-ID header
@@ -135,6 +136,8 @@ class Transformer:
 
             self.set_xreturnpathib(parsed_email, uuid, return_path_domain)
 
+            self.inject_beacon(parsed_email, from_address_domain, streamid)
+
             logging.info("Pushing to postfix queue " + self.queue_to_postfix.get_queue_name())
             self.queue_to_postfix.push(parsed_email.as_bytes())
             TRANSFORMER_PUSHED_TOTAL.inc()
@@ -156,6 +159,12 @@ class Transformer:
                     client.close()
                 except Exception as ex:
                     logging.error(ex, exc_info=True, stack_info=True)
+
+    def inject_beacon(self, parsed_email: Message, from_address_domain: str, streamid: str):
+        try:
+            injector_inject_beacon(parsed_email, self.domain_configuration[from_address_domain], streamid)
+        except Exception as ex:
+            logging.error("Failed to inject beacon ex=" + str(ex))
 
     # The mail is a blob.
     # If we send data outside the eml blob, we need to base-64-encode the eml to get it architecture independent.
@@ -252,5 +261,3 @@ class Transformer:
         except Exception as e:
             logging.error("Failed to send error exception")
             logging.error(e, exc_info=True, stack_info=True)
-
-
