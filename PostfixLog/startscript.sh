@@ -4,7 +4,11 @@ cp /configs/mailname /etc/mailname
 postalias /etc/aliases
 service syslog-ng start
 service postfix start
-cat /etc/mailname
+export RUNME="sed -i 's/MYHOSTNAME_REPLACEME/"`cat /configs/myhostname`"/' /etc/postfix/main.cf"
+eval $RUNME
+
+echo mailname `cat /configs/mailname`
+echo myhostname `cat /configs/myhostname`
 sleep 2
 ps -ef |grep postfix
 
