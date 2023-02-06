@@ -37,7 +37,7 @@ class MessageQueueWriter(object):
         cc_data = parsed_email.get_all("Cc")
         if cc_data is not None:
             for tuple in getaddresses(cc_data):
-                email_to.append(tuple[1])
+                email_cc.append(tuple[1])
         email_from = []
         from_data = parsed_email.get_all("From")
         if from_data is not None:
