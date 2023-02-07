@@ -89,22 +89,37 @@ class Transformer:
             parsed_email = message_from_bytes(msg)  # type: Message
             from_address = parseaddr(parsed_email.get("From"))[1]
             from_address_domain = from_address.split('@')[1].lower()
-            return_path_domain = self.domain_configuration[from_address_domain]["return-path-domain"]
-            selector = self.domain_configuration[from_address_domain]["selector"]
+            subject = parsed_email.get("Subject", "")
+
+            uuid = parsed_email.get("X-Uuid")
+            streamid = parsed_email.get("X-Stream-Id")
+
             email_to = []
             to_data = parsed_email.get_all("To")
             if to_data is not None:
                 for tup in getaddresses(to_data):
                     email_to.append(tup[1])
 
-            # Assume X-Uuid exists for now.
-            uuid = parsed_email.get("X-Uuid")
-            streamid = parsed_email.get("X-Stream-Id")
+            email_cc = []
+            cc_data = parsed_email.get_all("Cc")
+            if cc_data is not None:
+                for tup in getaddresses(cc_data):
+                    email_cc.append(tup[1])
+
+            if from_address_domain not in self.domain_configuration:
+                logging.error("Missing DKIM key: " + from_address_domain + " from=" + str(from_address) +
+                              " to=" + str(email_to) + " cc=" + str(email_cc) + " uuid=" + str(uuid) +
+                              " subject=" + subject)
+                # Let the dictionary lookup generate an exception
+
+            selector = self.domain_configuration[from_address_domain]["selector"]
+            return_path_domain = self.domain_configuration[from_address_domain]["return-path-domain"]
 
             logging.info("message details: from=" + str(from_address) + " to=" + str(email_to) +
+                         " cc=" + str(email_cc) +
                          " uuid=" + str(uuid) +
                          " streamid=" + str(streamid) +
-                         " subject=" + parsed_email.get("Subject", ""))
+                         " subject=" + str(subject))
 
             if uuid is None:
                 self.error(parsed_email, "X-Uuid missing", uuid, streamid, traceback.format_exc())
