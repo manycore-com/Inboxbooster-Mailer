@@ -1,3 +1,23 @@
+receiver:
+  bind:
+    inet-interface: localhost
+    inet-port: 8025
+  auth-logins:
+    - username: apa
+      password: banan
+    #You can have more logins if you like
+    - username: citron
+      password: dadel
+  ignore-smtp-mail-from-rcpt-to:
+    true
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  log-directory: logs
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9091
 transformer:
   email-headers:
     inject:
@@ -30,41 +50,9 @@ transformer:
     mail-type: test-mailtype
     # Third value is uuid
     sender-id: example-sender
-receiver:
-  bind:
-    inet-interface: localhost
-    inet-port: 8025
-  auth-logins:
-    - username: apa
-      password: banan
-    #You can have more logins if you like
-    - username: citron
-      password: dadel
-  ignore-smtp-mail-from-rcpt-to:
-    true
-  reliable-queue:
-    redis:
-      hostname: localhost
-      port: 6379
-  log-directory: logs
-mxserver:
-  bind:
-    inet-interface: localhost
-    inet-port: 8026
-  eml-directory:
-    tmp
-  reliable-queue:
-    redis:
-      hostname: localhost
-      port: 6379
-  log-directory: logs
-backdata:
-  reliable-queue:
-    redis:
-      hostname: localhost
-      port: 6379
-  post-url: "http://localhost:8090"
-  log-directory: logs
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9092
 postfixlog:
   logfile: /var/log/mail.log
   #logfile: test/test2.log
@@ -78,11 +66,41 @@ postfixlog:
     # run test_dummy_postfix.sh to have a dummy responder for test.
     hostname: localhost
     port: 8026
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9093
+mxserver:
+  bind:
+    inet-interface: localhost
+    inet-port: 8026
+  eml-directory:
+    tmp
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  log-directory: logs
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9094
+backdata:
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  post-url: "http://localhost:8090"
+  log-directory: logs
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9095
 redis:
   reliable-queue:
     redis:
       hostname: localhost
       port: 6379
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9096
 common-config:
   object-storage:
     type: s3
