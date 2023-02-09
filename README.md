@@ -1,8 +1,33 @@
 # Manycore-Mail
 Cloud native Open Source MTA.
 
+# Configuration
+The configuration assumes a config-map called **inboxbooster-config** exists.
+
+```shell
+kubectl create configmap inboxbooster-config \
+  --from-file inboxbooster-mailer-global.yaml \
+  --from-file inboxbooster-mailer-customer.yaml \
+  --from-file receiver_cert.pem \
+  --from-file receiver_key.pem \
+  --from-file mailname \
+  --from-file myhostname \
+  --from-file dkim/dkim-private-key-example.com.pem \
+  --from-file dkim/dkim-private-key-bexample.com.pem
+```
+<sup>Example of creating a config-map.</sup>
+
+
+## [inboxbooster-mailer-global.yaml](inboxbooster-mailer-global.yaml.example)
+This file has settings you should not normally have to alter.
+
+
+## [inboxbooster-mailer-customer.yaml](inboxbooster-mailer-customer.yaml.example)
+This file has settings you probably need to alter.
+
+
 # Modules
-1. [Redis](Redis). 
+1. [Redis](Redis) 
    - We currently use Redis for the queue through the package
      [Reliable Queue](https://github.com/manycore-com/Manycore-ReliableQueue)
    - If Redis needs to be restarted, it's state/rdq files are pushed to a 
@@ -11,7 +36,7 @@ Cloud native Open Source MTA.
    - Receives email as an HTTP POST.
    - Pushes the message to one of the redis queues named here:
      [inboxbooster-mailer-global.yaml](inboxbooster-mailer-global.yaml.example):reliable-queue/queue-names
-3. Receiver
+3. [Receiver](Receiver)
    - Receives emails over SMTP. 
    - Pushes the message to one of the redis queues named here:
      [inboxbooster-mailer-global.yaml](inboxbooster-mailer-global.yaml.example):reliable-queue/queue-names

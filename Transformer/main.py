@@ -47,10 +47,6 @@ if __name__ == "__main__":
     with open(args.customer_config_file, 'r') as file:
         customer_config = yaml.safe_load(file)
 
-    log_directory = customer_config["receiver"]["log-directory"]
-    if not log_directory.endswith("/"):
-        log_directory = log_directory + "/"
-
     primary_queue = global_config["reliable-queue"]["queue-names"]["primary-queue"]
     default_queue = global_config["reliable-queue"]["queue-names"]["default-queue"]
     event_queue_name = global_config["backdata"]["queue-name"]

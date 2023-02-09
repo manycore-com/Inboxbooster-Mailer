@@ -73,7 +73,6 @@ if __name__ == "__main__":
     ignore_smtp_to_from = customer_config["receiver"]["ignore-smtp-mail-from-rcpt-to"]
     rq_redis_host = customer_config["receiver"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["receiver"]["reliable-queue"]["redis"]["port"])
-    log_directory = customer_config["receiver"]["log-directory"]
 
     if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
         for login in customer_config["receiver"]["auth-logins"]:
