@@ -14,7 +14,6 @@ receiver:
     redis:
       hostname: localhost
       port: 6379
-  log-directory: logs
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9091
@@ -30,7 +29,6 @@ transformer:
     redis:
       hostname: localhost
       port: 6379
-  log-directory: logs
   # Feel free to add multiple dkim configurations.
   domain-settings:
    - domain: example.com
@@ -56,9 +54,6 @@ transformer:
     inet-port: 9092
 postfixlog:
   logfile: /var/log/mail.log
-  #logfile: test/test2.log
-  locationfile: /tmp/postfixlog-location
-  log-directory: logs
   reliable-queue:
     redis:
       hostname: localhost
@@ -80,7 +75,6 @@ mxserver:
     redis:
       hostname: localhost
       port: 6379
-  log-directory: logs
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9094
@@ -90,12 +84,11 @@ backdata:
       hostname: localhost
       port: 6379
   post-url: "http://localhost:8090"
-  log-directory: logs
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9095
 redis:
-  # Only used by the Prometheus datasource.
+  # Only used by the Prometheus datasource to ask Redis for queue sizes.
   reliable-queue:
     redis:
       hostname: localhost
