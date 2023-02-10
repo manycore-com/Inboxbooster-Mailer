@@ -9,7 +9,7 @@ from email.utils import getaddresses, parseaddr
 from email import message_from_bytes
 import dkim
 from reliable_queue import ReliableQueue
-from prometheus import TRANSFORMER_PUSHED_TOTAL, TRANSFORMER_POLLED_PRIMARY_TOTAL, TRANSFORMER_POLLED_DEFAULT_TOTAL
+from prometheus import TRANSFORMER_PUSHED_TOTAL, TRANSFORMER_POLLED_PRIMARY_TOTAL, TRANSFORMER_POLLED_DEFAULT_TOTAL, TRANSFORMER_WARNINGS_TOTAL
 from injector import injector_inject_beacon
 
 """
@@ -127,10 +127,13 @@ class Transformer:
 
             if "List-Unsubscribe" in parsed_email:
                 logging.warning("Email header List-Unsubscribe already exists!")
+                TRANSFORMER_WARNINGS_TOTAL.inc()
 
             if "Message-ID" in parsed_email:
+                mid = parsed_email.get("Message-ID")
                 del parsed_email["Message-ID"]
-                logging.debug("Pre-existing Message-ID. Deleting it.")
+                logging.warning("Pre-existing Message-ID. Deleting it: " + str(mid))
+                #TRANSFORMER_WARNINGS_TOTAL.inc()
 
             if "Date" in parsed_email:
                 del parsed_email["Date"]

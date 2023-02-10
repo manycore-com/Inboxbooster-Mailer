@@ -1,5 +1,6 @@
 import logging
 from email.message import Message
+from prometheus import TRANSFORMER_WARNINGS_TOTAL
 
 
 def injector_inject_beacon(parsed_email: Message, domain_configuration: dict, streamid: str):
@@ -15,6 +16,7 @@ def injector_inject_beacon(parsed_email: Message, domain_configuration: dict, st
 
         if beacon_url.find('{{') >= 0:
             logging.warning("Cannot parse beacon_url. valid substitutions are: {{ streamid }}")
+            TRANSFORMER_WARNINGS_TOTAL.inc()
             return
 
         beacon = '<img width="1" height="1" border="0" src="' + beacon_url + '">'
@@ -35,7 +37,8 @@ def injector_inject_beacon(parsed_email: Message, domain_configuration: dict, st
                 logging.info("Injected beacon!")
 
     except Exception as ex:
-        logging.error("Failed to inject beacon: ex=" + str(ex))
+        logging.warning("Failed to inject beacon: ex=" + str(ex))
+        TRANSFORMER_WARNINGS_TOTAL.inc()
 
 
 def parse_multipart(parsed_email: Message, beacon: str):
