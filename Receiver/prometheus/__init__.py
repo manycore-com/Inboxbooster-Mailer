@@ -14,6 +14,8 @@ NBR_RECIPIENTS_TOTAL = Counter('nbr_recipients', 'Number of recipients extracted
 
 NBR_DROPPED_EMAILS_TOTAL = Counter('nbr_dropped_emails', 'Number of emails that could not be processed.')
 
+RECEIVER_WARNINGS_TOTAL = Counter('receiver_warnings', "Number of warnings logged in the Receiver.")
+
 registry = CollectorRegistry()
 multiprocess.MultiProcessCollector(registry)
 

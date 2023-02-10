@@ -9,7 +9,7 @@ from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import AuthResult, LoginPassword, SMTP, Session, Envelope
 from smtpd import SmtpdHandler
 from reliable_queue import ReliableQueue
-from prometheus import start, NBR_EMAILS_ENQUEUED_TOTAL
+from prometheus import start, RECEIVER_WARNINGS_TOTAL
 import yaml
 
 auth_db = {}
@@ -41,7 +41,8 @@ def authenticator_func(server: SMTP, session: Session, envelope: Envelope, mecha
         logging.info("Success authenticating " + str(username) + " peer=" + str(session.peer))
         return AuthResult(success=True)
     else:
-        logging.info("Failure authenticating " + str(username) + " peer=" + str(session.peer))
+        logging.warning("Failure authenticating " + str(username) + " peer=" + str(session.peer))
+        RECEIVER_WARNINGS_TOTAL.inc()
         return AuthResult(success=False, handled=False)
 
 
