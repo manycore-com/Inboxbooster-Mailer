@@ -2,12 +2,14 @@ import os
 import time
 import json
 import logging
+from typing import Optional
 import multiprocessing
+import traceback
 from email.utils import parseaddr, getaddresses
 from aiosmtpd.smtp import Envelope
 from email.message import Message
 from email import message_from_bytes
-from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED
+from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED, MXSERVER_WARNINGS_TOTAL
 from reliable_queue import ReliableQueue
 
 
@@ -45,6 +47,22 @@ class MessageQueueWriter(object):
         priority = -1  # to keep same returned variables as in Receiver
         return email_to, email_from, ip, priority, parsed_email.get("Subject", "")
 
+    def error(self, msg: str, uuid: Optional[str], streamid: Optional[str], stacktrace: str):
+        try:
+            event = {
+                "event": "error",
+                "msg": msg,
+                "stack-trace": stacktrace,
+                "service": "mxserver",
+                "timestamp": int(time.time()),
+                "uuid": uuid
+            }
+            self.event_queue.push(json.dumps(event).encode("utf-8"))
+            logging.info("Error function called. msg=" + str(msg))
+        except Exception as e:
+            logging.error("Failed to send error exception")
+            logging.error(e, exc_info=True, stack_info=True)
+
     def run(self):
         self.event_queue = ReliableQueue(self.event_queue_name, self.rq_redis_host, self.rq_redis_port)
         time.sleep(1)
@@ -75,7 +93,7 @@ class MessageQueueWriter(object):
                         sent_event = True
                         MXSERVER_RECEIVED_UNSUBSCRIBE.inc()
                 except Exception as ex:
-                    logging.error("Failed to extract uuid from RCPT TO=" + str(unsub_addr) + " ex=" + str(ex))
+                    self.error("Failed to extract uuid from RCPT TO=" + str(unsub_addr) + " ex=" + str(ex), None, None, traceback.format_exc())
 
                 if not sent_event:
                     MXSERVER_RECEIVED_UNCLASSIFIED.inc()
@@ -88,7 +106,7 @@ class MessageQueueWriter(object):
                     with open(filename, "wb") as keyfile:
                         keyfile.write(parsed_email.as_bytes())
             except Exception as ex:
-                logging.error("MxServer.MessageQueueWriter.run() " + str(ex))
+                self.error("MxServer.MessageQueueWriter.run() " + str(ex), None, None, traceback.format_exc())
 
     def kill_worker(self):
         logging.info("MessageQueueWriter.kill_worker() called")
