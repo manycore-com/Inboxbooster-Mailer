@@ -3,6 +3,7 @@ import os
 import signal
 import logging
 import glob
+import requests
 from flask import Flask, make_response
 
 app = Flask(__name__)
@@ -36,7 +37,17 @@ def metrics_data():
     with postfix_emails_to_postfix_total.get_lock():
         ret.append('postfix_emails_to_postfix_total ' + str(0.0 + postfix_emails_to_postfix_total.value))
 
-    response = make_response("\n".join(ret) + "\n", 200)
+    response_text = "\n".join(ret) + "\n"
+    try:
+        response = requests.get("http://localhost:9099/metrics")
+        if response.status_code >= 200 and response.status_code < 300:
+            response_text += response.text + "\n"
+        else:
+            logging.error("Failed to get warnings metric: " + str(response.status_code))
+    except Exception as ex:
+        logging.error("Failed to get warnings metric: " + str(ex))
+
+    response = make_response(response_text, 200)
     response.mimetype = "text/plain"
     return response
 
