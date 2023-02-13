@@ -123,3 +123,6 @@ scalemail-backend unix -       n       n       -       2       pipe
   flags=R user=scalemail argv=/usr/lib/scalemail/bin/scalemail-store ${nexthop} ${user} ${extension}
 mailman   unix  -       n       n       -       -       pipe
   flags=FRX user=list argv=/usr/lib/mailman/bin/postfix-to-mailman.py ${nexthop} ${user}
+
+# Throttled destinations
+slow unix -      -       n       -       5       smtp -o syslog_name=postfix-slow

@@ -50,3 +50,10 @@ inet_interfaces = all
 inet_protocols = ipv4
 maximal_queue_lifetime = 12h
 
+
+transport_maps = hash:/etc/postfix/transport.map
+
+slow_destination_concurrency_limit = 3
+slow_destination_recipient_limit = 20
+slow_destination_rate_delay = 5s
+slow_destination_concurrency_failed_cohort_limit=10

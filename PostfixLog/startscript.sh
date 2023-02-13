@@ -2,10 +2,11 @@
 
 cp /configs/mailname /etc/mailname
 postalias /etc/aliases
-service syslog-ng start
-service postfix start
+postmap /etc/postfix/transport.map
 export RUNME="sed -i 's/MYHOSTNAME_REPLACEME/"`cat /configs/myhostname`"/' /etc/postfix/main.cf"
 eval $RUNME
+service syslog-ng start
+service postfix start
 
 echo mailname `cat /configs/mailname`
 echo myhostname `cat /configs/myhostname`
