@@ -14,6 +14,20 @@ event_queue = None
 queue_to_postfix = None
 
 
+def linux_memory_usage_percent():
+    """Return the memory usage in percent for Linux."""
+    with open('/proc/meminfo') as f:
+        meminfo = f.read()
+    meminfo = dict((i.split()[0].rstrip(':'), int(i.split()[1]))
+                   for i in meminfo.splitlines())
+    mem_total = meminfo['MemTotal']
+    mem_free = meminfo['MemFree']
+    mem_buffers = meminfo['Buffers']
+    mem_cached = meminfo['Cached']
+    mem_used = mem_total - mem_free - mem_buffers - mem_cached
+    return round(mem_used / float(mem_total) * 100.0, 3)
+
+
 def metrics_data():
     global primary_queue
     global default_queue
@@ -49,6 +63,8 @@ def metrics_data():
     except Exception as ex:
         print("Prometheus datasource: queue to postfix error: " + str(ex))
         ret.append("queue_to_postfix_messages 0.0")
+
+    ret.append("memory_usage_percent " + str(linux_memory_usage_percent()))
 
     response = make_response("\n".join(ret) + "\n", 200)
     response.mimetype = "text/plain"

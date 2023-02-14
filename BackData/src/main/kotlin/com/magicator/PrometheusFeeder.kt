@@ -1,9 +1,44 @@
 package com.magicator
 
+import io.prometheus.client.Collector
+import io.prometheus.client.Collector.MetricFamilySamples
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
+import io.prometheus.client.GaugeMetricFamily
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
+import java.io.File
+import kotlin.collections.ArrayList
+
+
+internal class CustomCollector : Collector() {
+
+    override fun collect(): List<MetricFamilySamples> {
+        val mfs: MutableList<MetricFamilySamples> = ArrayList()
+        // With no labels.
+        mfs.add(GaugeMetricFamily("memory_usage_percent", "Percentage of memory used", linux_memory_usage_percent()))
+        return mfs
+    }
+
+    companion object {
+
+        fun linux_memory_usage_percent(): Double {
+            var meminfo = mutableMapOf<String, Double>()
+            File("/proc/meminfo").forEachLine {
+                val first = it.split(":")
+                meminfo[first[0]] = first[1].trim().split(" ")[0].toDouble()
+            }
+
+            val mem_total = meminfo["MemTotal"]
+            val mem_free = meminfo["MemFree"]
+            val mem_buffers = meminfo["Buffers"]
+            val mem_cached = meminfo["Cached"]
+            val mem_used = mem_total!! - mem_free!! - mem_buffers!! - mem_cached!!
+            return mem_used / mem_total * 100.0
+        }
+
+    }
+}
 
 class PrometheusFeeder {
 
@@ -47,6 +82,8 @@ class PrometheusFeeder {
         val failedPushedEventsCounter = Counter.build()
             .name("failed_pushed_events_total")
             .help("Number of events that failed (got 400 / 500 response)").register()
+
+        val customCollector: Any = CustomCollector().register()
 
         var server: HTTPServer? = null
 
