@@ -71,6 +71,9 @@ mxserver:
     inet-port: 8026
   eml-directory:
     tmp
+  abuse:
+    yahoo:
+      to: "example@example.com"
   reliable-queue:
     redis:
       hostname: localhost

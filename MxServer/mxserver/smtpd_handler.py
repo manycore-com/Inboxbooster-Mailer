@@ -13,8 +13,8 @@ log_aiosmtpd.setLevel(logger.WARNING)
 # bind on all IP for now
 class SmtpdHandler(object):
 
-    def __init__(self, eml_directory: str, event_queue_name, rq_redis_host, rq_redis_port):
-        self.mqw = MessageQueueWriter(eml_directory, event_queue_name, rq_redis_host, rq_redis_port)
+    def __init__(self, eml_directory: str, event_queue_name, rq_redis_host, rq_redis_port, abuse_config):
+        self.mqw = MessageQueueWriter(eml_directory, event_queue_name, rq_redis_host, rq_redis_port, abuse_config)
 
     def addMail(self, envelope: Envelope):
         self.mqw.enqueue(envelope)

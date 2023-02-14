@@ -9,18 +9,20 @@ from email.utils import parseaddr, getaddresses
 from aiosmtpd.smtp import Envelope
 from email.message import Message
 from email import message_from_bytes
-from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED, MXSERVER_WARNINGS_TOTAL
+from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED, MXSERVER_WARNINGS_TOTAL, MXSERVER_RECEIVED_SPAM
 from reliable_queue import ReliableQueue
+from .abuse_analyzer import AbuseConfig, AbuseAnalyzer
 
 
 class MessageQueueWriter(object):
 
-    def __init__(self, destination_directory: str, event_queue_name, rq_redis_host, rq_redis_port):
+    def __init__(self, destination_directory: str, event_queue_name, rq_redis_host, rq_redis_port, abuse_config: AbuseConfig):
         self.counter = 0
         self.destination_directory = destination_directory
         self.event_queue_name = event_queue_name
         self.rq_redis_host = rq_redis_host
         self.rq_redis_port = rq_redis_port
+        self.abuse_config = abuse_config
         self.event_queue = None
         if not destination_directory.endswith(os.path.sep):
             self.destination_directory = self.destination_directory + os.path.sep
@@ -72,6 +74,8 @@ class MessageQueueWriter(object):
                 sent_event = False
                 envelope = self.queue.get()  # type: Envelope
                 unsub_addr = None
+                smtp_data = None
+                parsed_email = None
 
                 # If it looks like a legit unsubscribe email, let's send it back as an event.
                 try:
@@ -96,9 +100,28 @@ class MessageQueueWriter(object):
                     self.error("Failed to extract uuid from RCPT TO=" + str(unsub_addr) + " ex=" + str(ex), None, None, traceback.format_exc())
 
                 if not sent_event:
+                    if parsed_email is None:
+                        smtp_data = envelope.original_content
+                        parsed_email = message_from_bytes(smtp_data)  # type: Message
+                    abuse_analyzer = AbuseAnalyzer(self.abuse_config, parsed_email)
+                    abuse_result = abuse_analyzer.analyze()
+                    if abuse_result.is_spam_report and abuse_result.uuid is not None:
+                        event = {
+                            "event": "spam-report",
+                            "uuid": abuse_result.uuid,
+                            "email": abuse_result.email,
+                            "timestamp": int(time.time())
+                        }
+                        self.event_queue.push(json.dumps(event).encode("utf-8"))
+                        logging.info("Sending spam-report event. RCPT TO:" + str(unsub_addr) + " event=" + json.dumps(event))
+                        sent_event = True
+                        MXSERVER_RECEIVED_SPAM.inc()
+
+                if not sent_event:
                     MXSERVER_RECEIVED_UNCLASSIFIED.inc()
-                    smtp_data = envelope.original_content
-                    parsed_email = message_from_bytes(smtp_data)  # type: Message
+                    if parsed_email is None:
+                        smtp_data = envelope.original_content
+                        parsed_email = message_from_bytes(smtp_data)  # type: Message
                     email_to, email_from, ip, priority, subject = MessageQueueWriter.parse_smtp_headers(parsed_email)
                     filename = self.destination_directory + str(self.counter) + '.eml'
                     logging.info("creating file name=" + str(filename) + " from=" + str(email_from) +

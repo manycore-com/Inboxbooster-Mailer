@@ -4,7 +4,7 @@ import argparse
 import logging
 import signal
 from aiosmtpd.controller import Controller
-from mxserver import SmtpdHandler
+from mxserver import SmtpdHandler, AbuseConfig
 import yaml
 from prometheus import start
 
@@ -54,12 +54,18 @@ if __name__ == "__main__":
     bind_address = customer_config["mxserver"]["bind"]["inet-interface"]
     port = customer_config["mxserver"]["bind"]["inet-port"]
 
+    if "abuse" not in customer_config["mxserver"]:
+        abuse_config_dict = {}
+    else:
+        abuse_config_dict = customer_config["mxserver"]["abuse"]
+    abuse_config = AbuseConfig(abuse_config_dict)
+
     if not os.path.isdir(eml_directory):
         raise RuntimeError("Directory does not exist: " + str(eml_directory))
 
     logging.info("Starting MxServer on " + bind_address + ":" + str(port))
 
-    smtpd_handler = SmtpdHandler(eml_directory, event_queue_name, rq_redis_host, rq_redis_port)
+    smtpd_handler = SmtpdHandler(eml_directory, event_queue_name, rq_redis_host, rq_redis_port, abuse_config)
     try:
         controller = Controller(
             smtpd_handler,
