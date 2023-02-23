@@ -36,4 +36,7 @@ if __name__ == "__main__":
 
     for line in sys.stdin:
         line = line.strip()
-        pl.process_line(line)
+        try:
+            pl.process_line(line)
+        except Exception as ex:
+            logging.exception("Exception in process_line")

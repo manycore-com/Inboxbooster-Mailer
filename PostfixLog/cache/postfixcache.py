@@ -1,5 +1,6 @@
 import logging
 import re
+from email_validator import validate_email, EmailNotValidError
 
 
 class PostfixCache:
@@ -16,6 +17,7 @@ class PostfixCache:
         self.attempt = 0
         self.ip = None
         self.response_code = None
+        self.to = set()
 
     def add_data(self, data: str):
         if data == "removed":
@@ -25,6 +27,15 @@ class PostfixCache:
             status_match = self.match_status.match(data)
             relay_match = self.match_relay.match(data)
             response_code_match = self.match_response_code.match(data)
+
+            if data.startswith("to="):
+                recipient = data[4:].split(" ")[0].split(">")[0]
+                try:
+                    validate_email(recipient, check_deliverability=False)
+                    self.to.add(recipient)
+                except EmailNotValidError as e:
+                    logging.warning("Invalid recipient: " + recipient)
+
             if response_code_match:
                 groups = response_code_match.groups()
                 if 2 == len(groups):
