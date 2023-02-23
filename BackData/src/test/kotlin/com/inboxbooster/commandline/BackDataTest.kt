@@ -1,6 +1,6 @@
-package com.magicator.commandline
+package com.inboxbooster.commandline
 
-import com.magicator.reliablequeue.ReliableQueue
+import com.inboxbooster.reliablequeue.ReliableQueue
 import org.junit.jupiter.api.Test
 import org.yaml.snakeyaml.Yaml
 import java.io.File

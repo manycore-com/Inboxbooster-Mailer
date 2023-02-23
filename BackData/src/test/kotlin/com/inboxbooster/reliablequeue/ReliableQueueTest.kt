@@ -1,4 +1,4 @@
-package com.magicator.reliablequeue
+package com.inboxbooster.reliablequeue
 
 import org.junit.jupiter.api.Test
 

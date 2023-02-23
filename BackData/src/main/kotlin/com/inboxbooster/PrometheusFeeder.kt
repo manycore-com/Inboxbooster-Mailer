@@ -1,7 +1,6 @@
-package com.magicator
+package com.inboxbooster
 
 import io.prometheus.client.Collector
-import io.prometheus.client.Collector.MetricFamilySamples
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.GaugeMetricFamily

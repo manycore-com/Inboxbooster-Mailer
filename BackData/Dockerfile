@@ -11,6 +11,6 @@ RUN mkdir -p /app/logs
 
 CMD [ "java", \
   "-cp", "BackData-1.0-SNAPSHOT-all.jar", \
-  "com.magicator.commandline.BackData", \
+  "com.inboxbooster.commandline.BackData", \
   "--global-config-file", "/configs/inboxbooster-mailer-global.yaml", \
   "--customer-config-file", "/configs/inboxbooster-mailer-customer.yaml" ]

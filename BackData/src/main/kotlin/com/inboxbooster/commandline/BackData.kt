@@ -1,9 +1,9 @@
-package com.magicator.commandline
+package com.inboxbooster.commandline
 
-import com.magicator.PrometheusFeeder
-import com.magicator.exceptions.EventPostError
+import com.inboxbooster.PrometheusFeeder
+import com.inboxbooster.exceptions.EventPostError
 import org.pmw.tinylog.Logger
-import com.magicator.reliablequeue.ReliableQueue
+import com.inboxbooster.reliablequeue.ReliableQueue
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required

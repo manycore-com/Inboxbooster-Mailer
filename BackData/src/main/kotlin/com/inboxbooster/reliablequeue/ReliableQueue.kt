@@ -1,4 +1,4 @@
-package com.magicator.reliablequeue
+package com.inboxbooster.reliablequeue
 
 import org.pmw.tinylog.Logger
 import redis.clients.jedis.Jedis

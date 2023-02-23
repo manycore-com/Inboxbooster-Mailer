@@ -1,4 +1,4 @@
-package com.magicator.exceptions
+package com.inboxbooster.exceptions
 
 class EventPostError : RuntimeException {
     val statusCode: Int
