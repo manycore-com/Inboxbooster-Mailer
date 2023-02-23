@@ -46,7 +46,8 @@ class BackData {
                     reliableQueue = ReliableQueue(redisHost, redisPort, queueName, 50)
                 }
 
-                // TODO post data to our server
+                // TODO post data to our server, if this is configured.
+
                 polledEvents = reliableQueue!!.blockingPoll()
                 if (polledEvents != null) {
                     events = mutableListOf()
@@ -54,6 +55,7 @@ class BackData {
                         val jo = JSONObject(polledEvent.decodeToString())
                         // Super important: Remove rcpt if any.
                         jo.remove("rcpt")
+                        jo.remove("fd")  // the from domain
                         events.add(jo.toString().encodeToByteArray())
                     }
                 }
