@@ -38,13 +38,25 @@ class BackData {
     fun execute() {
         var anyException = false
         while (true) {
-            var events: List<ByteArray>?
+            var events: MutableList<ByteArray>? = null
+            var polledEvents: List<ByteArray>?
             try {
                 if (null == reliableQueue) {
                     Logger.info("JedisException raised, reconnecting to Redis.")
                     reliableQueue = ReliableQueue(redisHost, redisPort, queueName, 50)
                 }
-                events = reliableQueue!!.blockingPoll()
+
+                // TODO post data to our server
+                polledEvents = reliableQueue!!.blockingPoll()
+                if (polledEvents != null) {
+                    events = mutableListOf()
+                    polledEvents.forEach() { polledEvent ->
+                        val jo = JSONObject(polledEvent.decodeToString())
+                        // Super important: Remove rcpt if any.
+                        jo.remove("rcpt")
+                        events.add(jo.toString().encodeToByteArray())
+                    }
+                }
 
                 val payload: String? = if (events == null) {
                     null
