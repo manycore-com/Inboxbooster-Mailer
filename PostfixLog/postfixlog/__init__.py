@@ -46,7 +46,12 @@ class PostfixLog:
                         logging.info(str(event))
                     elif cache.status in ["deferred", "bounced", "expired"]:
                         if cache.response_code is None:
-                            bounceType = None
+                            if "Connection timed out" in cache.status_message:
+                                #bounceType = "unroutable"
+                                bounceType = "soft"  # TODO: Temporary
+                                logging.info("deferred with Connection timed out. Setting to soft bounce")
+                            else:
+                                bounceType = None
                         elif cache.response_code >= 500 and cache.response_code < 599:
                             bounceType = 'hard'
                         elif cache.response_code >= 400 and cache.response_code < 499:
