@@ -42,7 +42,8 @@ class PostfixLog:
                             "event": "delivered",
                             "uuid": cache.uuid,
                             "timestamp": int(time.time()),
-                            "ip": cache.ip
+                            "ip": cache.ip,
+                            "rcpt": list(cache.to)
                         }
                         self.reliable_queue.push(json.dumps(event).encode("utf-8"))
                         logging.info(str(event))
