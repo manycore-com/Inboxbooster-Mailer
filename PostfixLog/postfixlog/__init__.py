@@ -43,7 +43,8 @@ class PostfixLog:
                             "uuid": cache.uuid,
                             "timestamp": int(time.time()),
                             "ip": cache.ip,
-                            "rcpt": list(cache.to)
+                            "rcpt": list(cache.to),
+                            "fd": cache.from_domain
                         }
                         self.reliable_queue.push(json.dumps(event).encode("utf-8"))
                         logging.info(str(event))
@@ -69,7 +70,8 @@ class PostfixLog:
                             "ip": cache.ip,
                             "type": str(bounceType),
                             "reason": cache.status_message,
-                            "rcpt": list(cache.to)
+                            "rcpt": list(cache.to),
+                            "fd": cache.from_domain
                         }
 
                         if bounceType is None:

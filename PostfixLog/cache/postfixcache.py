@@ -18,6 +18,7 @@ class PostfixCache:
         self.ip = None
         self.response_code = None
         self.to = set()
+        self.from_domain = None
 
     def add_data(self, data: str):
         if data == "removed":
@@ -29,12 +30,18 @@ class PostfixCache:
             response_code_match = self.match_response_code.match(data)
 
             if data.startswith("to="):
-                recipient = data[4:].split(" ")[0].split(">")[0]
                 try:
+                    recipient = data[4:].split(" ")[0].split(">")[0]
                     validate_email(recipient, check_deliverability=False)
                     self.to.add(recipient)
                 except EmailNotValidError as e:
-                    logging.warning("Invalid recipient: " + recipient)
+                    logging.warning("Failed to extract recipient from: " + str(data))
+
+            if data.startswith("from=") and self.from_domain is None:
+                try:
+                    self.from_domain = data[6:].split(" ")[0].split(">")[0].split("@")[1].lower()
+                except EmailNotValidError as e:
+                    logging.warning("Failed to extract from domain from: " + str(data))
 
             if response_code_match:
                 groups = response_code_match.groups()
