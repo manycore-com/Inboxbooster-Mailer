@@ -1,5 +1,6 @@
 package com.inboxbooster.commandline
 
+import com.inboxbooster.BounceManager
 import com.inboxbooster.PrometheusFeeder
 import com.inboxbooster.exceptions.EventPostError
 import org.pmw.tinylog.Logger
@@ -25,7 +26,9 @@ class BackData {
     val redisHost: String
     val redisPort: Int
     val queueName: String
-    constructor(redisHost: String, redisPort: Int, queueName: String, postUrl: String, maxAgeToRetry: Long) {
+
+    val bounceManager: BounceManager?
+    constructor(redisHost: String, redisPort: Int, queueName: String, postUrl: String, maxAgeToRetry: Long, bounceManager: BounceManager?) {
         this.reliableQueue = null
         this.postUrl = postUrl
         this.maxAgeToRetry = maxAgeToRetry
@@ -33,6 +36,8 @@ class BackData {
         this.redisHost = redisHost
         this.redisPort = redisPort
         this.queueName = queueName
+
+        this.bounceManager = bounceManager
     }
 
     fun execute() {
@@ -46,18 +51,18 @@ class BackData {
                     reliableQueue = ReliableQueue(redisHost, redisPort, queueName, 50)
                 }
 
-                // TODO post data to our server, if this is configured.
-
                 polledEvents = reliableQueue!!.blockingPoll()
                 if (polledEvents != null) {
                     events = mutableListOf()
                     polledEvents.forEach() { polledEvent ->
                         val jo = JSONObject(polledEvent.decodeToString())
+                        this.bounceManager?.addEvent(jo)
                         // Super important: Remove rcpt if any.
                         jo.remove("rcpt")
                         jo.remove("fd")  // the from domain
                         events.add(jo.toString().encodeToByteArray())
                     }
+                    this.bounceManager?.post()
                 }
 
                 val payload: String? = if (events == null) {
@@ -172,18 +177,36 @@ class BackData {
             val backDataSection = ((customerConfig["backdata"]) as LinkedHashMap<String,String>)
             val reliableQueueSection = ((backDataSection["reliable-queue"]) as LinkedHashMap<String,String>)
             val redisSection = ((reliableQueueSection["redis"]) as LinkedHashMap<String,String>)
-            val pv: Any = redisSection["port"]!!
+            var pv: Any = redisSection["port"]!!
             val port: Int = if (pv is Int) {
                 pv
             } else if (pv is String) {
                 pv.toInt()
             } else {
-                -1
+                throw IllegalArgumentException("Yaml backdata/redis/port is not interpretable as integer.")
+            }
+
+            val bounceManager: BounceManager? = if (backDataSection.containsKey("bounce-manager")) {
+                val bounceManagerSection = ((backDataSection["bounce-manager"]) as LinkedHashMap<String,String>)
+                var pv: Any = bounceManagerSection["cid"]!!
+                val cid: Int = if (pv is Int) {
+                    pv
+                } else if (pv is String) {
+                    pv.toInt()
+                } else {
+                    throw IllegalArgumentException("Yaml backdata/bounce-manager/cid is not interpretable as integer.")
+                }
+                val secret = bounceManagerSection["secret"]!!
+                val bounceUrl = bounceManagerSection["url"]!!
+                println("b $cid $secret $bounceUrl")
+                BounceManager(cid, secret, bounceUrl)
+            } else {
+                null
             }
 
             PrometheusFeeder.start("0.0.0.0", 9090)
 
-            val bd = BackData(redisSection["hostname"]!!, port, queueName!!, backDataSection["post-url"]!!, maxAgeToRetry)
+            val bd = BackData(redisSection["hostname"]!!, port, queueName!!, backDataSection["post-url"]!!, maxAgeToRetry, bounceManager)
             bd.execute()
         }
     }

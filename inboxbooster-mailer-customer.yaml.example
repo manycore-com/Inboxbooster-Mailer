@@ -87,6 +87,10 @@ backdata:
       hostname: localhost
       port: 6379
   post-url: "http://localhost:8090"
+  bounce-manager:
+    secret: apa
+    cid: 1
+    url: "http://localhost:8091"
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9095
