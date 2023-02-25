@@ -1,9 +1,11 @@
 import logging
 import sys
 import argparse
+import time
+
 import yaml
-from reliable_queue import ReliableQueue
 from postfixlog import PostfixLog
+from postfix_poller import PostfixPoller
 
 
 def get_arg_parse_object():
@@ -27,16 +29,39 @@ if __name__ == "__main__":
     with open(args.customer_config_file, 'r') as file:
         customer_config = yaml.safe_load(file)
 
+    incoming_queue_name = global_config["postfix"]["incoming-queue-name"]
     event_queue_name = global_config["backdata"]["queue-name"]
     rq_redis_host = customer_config["postfixlog"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["postfixlog"]["reliable-queue"]["redis"]["port"])
 
-    reliable_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
-    pl = PostfixLog(reliable_queue)
+    postfix_hostname = customer_config["postfixlog"]["postfix"]["hostname"]
+    postfix_port = int(customer_config["postfixlog"]["postfix"]["port"])
+
+    pl = PostfixLog(event_queue_name, rq_redis_host, rq_redis_port)
+
+
+    postfix_poller = PostfixPoller(
+        pl.queue,
+        incoming_queue_name,
+        event_queue_name,
+        rq_redis_host,
+        rq_redis_port,
+        postfix_hostname,
+        postfix_port
+    )
+
+    time.sleep(1)
 
     for line in sys.stdin:
-        line = line.strip()
-        try:
-            pl.process_line(line)
-        except Exception as ex:
-            logging.exception("Exception in process_line")
+        pl.queue.put(line)
+
+    postfix_poller.shutdown()
+
+    while not pl.queue.empty():
+        print("not empty queue")
+        time.sleep(1)
+
+    # Are there events being sent?
+    time.sleep(1)
+
+    pl.shutdown()

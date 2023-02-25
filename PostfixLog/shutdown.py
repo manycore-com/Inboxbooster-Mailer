@@ -113,14 +113,8 @@ if __name__ == "__main__":
     with open(args.customer_config_file, 'r') as file:
         customer_config = yaml.safe_load(file)  # dict
 
-    logging.info("Sending SIGQUIT to Poller")
-    if os.path.isfile('/tmp/INBOXBOOSTER_POSTFIX_POLLER_PID'):
-        with open('/tmp/INBOXBOOSTER_POSTFIX_POLLER_PID', 'r') as content_file:
-            content = content_file.read()
-            receiver_pid = int(content.strip())
-            os.kill(receiver_pid, signal.SIGQUIT)
-    else:
-        logging.warning("Missing pid file for poller: /tmp/INBOXBOOSTER_POSTFIX_POLLER_PID")
+    logging.info("Sending SIGQUIT to Log Analyzer")
+    os.system("killall tail")
 
     logging.info("Running: /usr/sbin/postfix stop")
     os.system("/usr/sbin/postfix stop")
@@ -130,8 +124,5 @@ if __name__ == "__main__":
     queue_to_postfix = global_config["postfix"]["incoming-queue-name"]
 
     rq = ReliableQueue(queue_to_postfix, rq_redis_host, rq_redis_port)
-
     push_messages_to_rq(rq, "/var/spool/postfix")
-
-    logging.info("Sending SIGQUIT to Log Analyzer")
-    os.system("killall tail")
+    logging.info("shutdown.py: Done")

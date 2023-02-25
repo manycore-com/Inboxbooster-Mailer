@@ -20,10 +20,6 @@ done
 
 tail -F /var/log/mail.log &
 
-python3 poll_from_reliable_queue.py \
-  --global-config-file=/configs/inboxbooster-mailer-global.yaml \
-  --customer-config-file=/configs/inboxbooster-mailer-customer.yaml &
-
 tail -F /var/log/mail.log | python3 main.py \
   --global-config-file=/configs/inboxbooster-mailer-global.yaml \
   --customer-config-file=/configs/inboxbooster-mailer-customer.yaml

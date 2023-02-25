@@ -34,11 +34,13 @@ RUN mkdir -p /app/cache
 RUN mkdir -p /app/postfixlog
 RUN mkdir -p /app/prometheus_webserver
 RUN mkdir -p /app/prometheus_poller
+RUN mkdir -p /app/postfix_poller
 
 COPY cache /app/cache
 COPY postfixlog /app/postfixlog
 COPY prometheus_webserver /app/prometheus_webserver
 COPY prometheus_poller /app/prometheus_poller
+COPY postfix_poller /app/postfix_poller
 COPY *.py /app/
 
 COPY startscript.sh .

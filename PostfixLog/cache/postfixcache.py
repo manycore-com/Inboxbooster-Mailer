@@ -18,7 +18,7 @@ class PostfixCache:
         self.ip = None
         self.response_code = None
         self.to = set()
-        self.from_domain = None
+        self.return_path = None
 
     def add_data(self, data: str):
         if data == "removed":
@@ -37,9 +37,9 @@ class PostfixCache:
                 except EmailNotValidError as e:
                     logging.warning("Failed to extract recipient from: " + str(data))
 
-            if data.startswith("from=") and self.from_domain is None:
+            if data.startswith("from=") and self.return_path is None:
                 try:
-                    self.from_domain = data[6:].split(" ")[0].split(">")[0].split("@")[1].lower()
+                    self.return_path = data[6:].split(" ")[0].split(">")[0].lower()
                 except EmailNotValidError as e:
                     logging.warning("Failed to extract from domain from: " + str(data))
 
