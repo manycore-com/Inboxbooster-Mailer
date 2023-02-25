@@ -10,7 +10,9 @@ from email import message_from_bytes
 from smtplib import SMTP as Client
 from reliable_queue import ReliableQueue
 from email.utils import getaddresses, parseaddr
-from prometheus_webserver import stop_prometheus_endpoint, postfix_emails_polled_total, postfix_emails_to_postfix_total
+from prometheus_webserver import start_prometheus_endpoint, stop_prometheus_endpoint, postfix_emails_polled_total, postfix_emails_to_postfix_total
+from prometheus_poller import start
+
 
 _singleton = None
 
@@ -65,6 +67,12 @@ class PostfixPoller:
     def run(self):
         self.incoming_queue = ReliableQueue(self.incoming_queue_name, self.rq_redis_host, self.rq_redis_port)
         self.event_queue = ReliableQueue(self.event_queue_name, self.rq_redis_host, self.rq_redis_port)
+
+        logging.info("Starting External Prometheus Endpoint")
+        start_prometheus_endpoint()
+
+        logging.info("Starting Internal Prometheus Poller endpoint")
+        start()
 
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGQUIT, signal_handler)
