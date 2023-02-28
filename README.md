@@ -64,6 +64,154 @@ This file has settings you probably need to alter.
    - Posts the event to endpoint defined in
      [inboxbooster-mailer-customer.yaml](inboxbooster-mailer-customer.yaml.example):backdata/post-url
 
+# Deployment
+## 1. Redis
+Start with redis. All the other modules requires Redis as the backbone queue.
+
+Redis itself can optionally be configured to use a file storage for persistence. 
+On a full restart, take down Redis last and start Redis first.
+
+To deploy it, please run
+```shell
+kubectl create -f Redis/pod.yaml
+```
+To configure the services, please run
+```shell
+kubectl create -f Redis/service.yaml
+```
+To configure the Prometheus endpoint, please run
+```shell
+kubectl create -f Redis/serviceMonitor.yml
+```
+
+## 2. Backdata
+Second to start is backdata so you can start receiving events.
+
+To deploy it, please run
+```shell
+kubectl create -f BackData/pod.yaml
+```
+Even if Backdata only polls data from Redis, we still need to configure the Prometheus port:
+```shell
+kubectl create -f BackData/service.yaml
+kubectl create -f BackData/serviceMonitor.yml
+```
+## 3. MxServer
+Thirdly, start the MxServer. It is a good idea to verify you can connect to this server
+on port 25, and the address you connect to is the DNS's MX record for your return-path-domain that
+you configured in the Transformer/domain-settings section of
+[inboxbooster-mailer-customer.yaml](inboxbooster-mailer-customer.yaml.example).
+
+Not all networks allows you to connect to port 25. To test, please try to connect to our friends at Google:
+
+```shell
+telnet aspmx.l.google.com 25
+```
+
+To deploy it, please run
+```shell
+kubectl create -f MxServer/pod.yaml
+```
+MxServer provides both a public smtp listener at port 25, and a Prometheus endpoint.
+```shell
+kubectl create -f MxServer/service.yaml
+kubectl create -f MxServer/serviceMonitor.yml
+```
+
+
+## 4. Postfix
+Now it's time to start the Postfix pod.
+This pod must under no circumstances be publicly visible.
+If you can connect to it from the outside, terminate the pod immediately (kubectl delete pod postfix)
+and then analyze why it doesn't work! Postfix on this pod is configured for relaying and you'll destroy
+the reputation of the IP address you're using in minutes if it's publicly visible.
+
+Note: MxServer is not capable of relaying. It only has code to receive emails and analyze if they are
+async bounces. It's a Python script and not a real Postfix server.
+
+To deploy it, please run
+```shell
+kubectl create -f PostfixLog/pod.yaml
+```
+Postfix also has a Prometheus endpoint.
+```shell
+kubectl create -f PostfixLog/service.yaml
+kubectl create -f PostfixLog/serviceMonitor.yml
+```
+
+## 5. Transformer
+Transformer signs your emails with DKIM. It also adds a Message-ID header and sets the Return-Path.
+It strictly consumes data from Redis and pushes it back to Redis. It publishes no ports even to the
+internal network.
+
+To deploy it, please run
+```shell
+kubectl create -f Transformer/pod.yaml
+```
+Transformer also has a Prometheus endpoint.
+```shell
+kubectl create -f Transformer/service.yaml
+kubectl create -f Transformer/serviceMonitor.yml
+```
+
+## 6. Receiver / HttpReceiver
+Receiver and HttpReceiver are the two modules that receive emails. They both push the emails to Redis.
+
+Both need to listen to a port on the outside world.
+
+To deploy it, please run
+```shell
+kubectl create -f Receiver/pod.yaml
+```
+Receiver has both a Prometheus endpoint and a public port.
+```shell
+kubectl create -f Receiver/service.yaml
+kubectl create -f Receiver/serviceMonitor.yml
+```
+
+# Termination
+## 1. Receiver/HttpReceiver
+Start in the receiving end to ensure no new emails are received.
+
+To terminate the Receiver, please run
+```shell
+kubectl delete pod receiver
+```
+## 2. Transformer
+Next, terminate the Transformer. As Receiver has been terminated, the queue to Transformer
+should empty quickly.
+
+To terminate the Transformer, please run
+```shell
+kubectl delete pod transformer
+```
+## 3. Postfix
+When you terminate postfix, the unsent or deferred messages are put on Redis and will be sent
+when Postfix is started again.
+
+To terminate Postfix, please run
+```shell
+kubectl delete pod postfix
+```
+## 4. Backdata
+To terminate Backdata, please run
+```shell
+kubectl delete pod backdata
+```
+## 5. MxServer
+To terminate MxServer, please run
+```shell
+kubectl delete pod mxserver
+```
+## 6. Redis
+Finally, terminate Redis. If you have object-storage configured, the shutdownscript will create a redis
+rdb dump file and upload it to object storage. When Redis is restarted, it will load the dump file.
+
+To terminate Redis, please run
+```shell
+kubectl delete pod redis
+```
+
 # Monitoring
 ## Prometheus
 All modules have Prometheus endpoints that by default listens to 0.0.0.0:9090.
