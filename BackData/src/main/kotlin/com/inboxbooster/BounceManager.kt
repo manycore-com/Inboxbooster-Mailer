@@ -101,6 +101,8 @@ class BounceManager {
             val hash = sha224(toHash)
             val useUrl = this.url + separator1 + "cid=" + this.cid.toString() + "&ts=" + tsNow + "&hash=" + hash
             val whatToPost = "[" + this.events.joinToString(",") + "]"
+            Logger.info("Bounce Data post to: $useUrl")
+            Logger.info("Bounce Data posting: $whatToPost")
 
             workerPool.submit {
                 val client = HttpClient.newHttpClient()
@@ -119,7 +121,7 @@ class BounceManager {
                     Logger.error(e)
                 }
 
-                if (response != null && (400 <= response!!.statusCode())) {
+                if (response != null && (400 <= response.statusCode())) {
                     Logger.error("Failed to post to Eventcollector: " + response.toString())
                 }
 
