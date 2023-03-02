@@ -46,7 +46,7 @@ recipient_delimiter = +
 # Danger! Never have an open relay on the internet! You will burn your
 # ip address in minutes.
 # Here it is ok because it is inside a Kubernetes pod.
-inet_interfaces = 127.0.0.1
+inet_interfaces = all
 inet_protocols = ipv4
 maximal_queue_lifetime = 12h
 
