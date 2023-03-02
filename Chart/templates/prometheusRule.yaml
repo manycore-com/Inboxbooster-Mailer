@@ -1,0 +1,38 @@
+{{- if .Values.prometheus.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "inboxbooster-mailer.fullname" . }}
+spec:
+  groups:
+  - name: inboxbooster-mailer
+    rules:
+    - alert: DeliveredEvents
+      annotations:
+        description: {{ printf "Actual delivered events are 70% lower than expected ({{ $value|humanize }})." }}
+        summary: Delivered events doesn't match the expectation.
+      expr: ((sum(increase(delivered_events_total{job="{{ include "inboxbooster-mailer.backdata.fullname" . }}"}[20m])) / on(job)
+        sum(increase(nbr_recipients_total{job="{{ include "inboxbooster-mailer.receiver.fullname" . }}"}[20m]))) <= 0.7) and on ()
+        (sum(increase(nbr_recipients_total{job="{{ include "inboxbooster-mailer.receiver.fullname" . }}"}[20m])) >= 50)
+      for: 10m
+      labels:
+        namespace: {{ .Release.Namespace }}
+        receiver: {{ .Values.prometheus.prometheusRule.receiver }}
+        severity: critical
+    - alert: MailerThroughputs
+      annotations:
+        description: At least one of the mailer latest throughput doesn't match doesn't match the others.
+        summary: Mailer latest throughput doesn't match.
+      expr: (sum(increase(nbr_emails_enqueued_total{job="{{ include "inboxbooster-mailer.receiver.fullname" . }}"}[5m]))) !=
+        (sum(increase(transformer_polled_primary_total{job="{{ include "inboxbooster-mailer.transformer.fullname" . }}"}[5m])) +
+          sum(increase(transformer_polled_default_total{job="{{ include "inboxbooster-mailer.transformer.fullname" . }}"}[5m]))) !=
+        (sum(increase(transformer_pushed_total{job="{{ include "inboxbooster-mailer.transformer.fullname" . }}"}[5m]))) !=
+        (sum(increase(postfix_emails_polled_total{job="{{ include "inboxbooster-mailer.postfix.fullname" . }}"}[5m]))) !=
+        (sum(increase(postfix_emails_to_postfix_total{job="{{ include "inboxbooster-mailer.postfix.fullname" . }}"}[5m]))) !=
+        (sum(increase(delivered_events_total{job="{{ include "inboxbooster-mailer.backdata.fullname" . }}"}[5m])))
+      for: 10m
+      labels:
+        namespace: {{ .Release.Namespace }}
+        receiver: {{ .Values.prometheus.prometheusRule.receiver }}
+        severity: critical
+{{- end }}

@@ -1,0 +1,22 @@
+{{- if .Values.prometheus.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "inboxbooster-mailer.mx-server.fullname" . }}
+spec:
+  endpoints:
+    - honorLabels: true
+      interval: 30s
+      path: "/metrics"
+      port: http
+      metricRelabelings:
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "inboxbooster-mailer.labels" . | nindent 6 }}
+      app.kubernetes.io/component: mx-server
+{{- end }}

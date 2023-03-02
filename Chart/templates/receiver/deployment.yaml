@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "inboxbooster-mailer.receiver.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: receiver
+spec:
+  replicas: {{ .Values.receiver.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "inboxbooster-mailer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: receiver
+  {{- if .Values.receiver.updateStrategy }}
+  strategy: {{- toYaml .Values.receiver.updateStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- if or .Values.podAnnotations .Values.receiver.podAnnotations }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.receiver.podAnnotations }}
+        {{- toYaml .Values.receiver.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "inboxbooster-mailer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: receiver
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "inboxbooster-mailer.receiver.serviceAccountName" . }}
+      {{- if .Values.receiver.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.receiver.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: receiver
+          {{- if .Values.receiver.securityContext.enabled }}
+          securityContext:
+            {{- omit .Values.receiver.securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.receiver.image.repository }}:{{ .Values.receiver.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.receiver.image.pullPolicy }}
+          ports:
+            - name: smtp
+              containerPort: {{ .Values.receiver.service.smtpPort }}
+              protocol: TCP
+            - name: http
+              containerPort: {{ .Values.receiver.service.httpPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: global-config
+              mountPath: "/configs/inboxbooster-mailer-global.yaml"
+              subPath: "inboxbooster-mailer-global.yaml"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/inboxbooster-mailer-customer.yaml"
+              subPath: "inboxbooster-mailer-customer.yaml"
+              readOnly: true
+            - name: tls-cert
+              mountPath: "/configs/receiver_cert.pem"
+              subPath: "receiver_cert.pem"
+              readOnly: true
+            - name: tls-key
+              mountPath: "/configs/receiver_key.pem"
+              subPath: "receiver_key.pem"
+              readOnly: true
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "python3"
+                  - "/app/shutdown.py"
+                  - "--global-config-file=/configs/inboxbooster-mailer-global.yaml"
+                  - "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+          {{- if .Values.receiver.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: {{ .Values.receiver.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.receiver.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.receiver.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.receiver.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.receiver.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.receiver.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: {{ .Values.receiver.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.receiver.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.receiver.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.receiver.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.receiver.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.receiver.resources | nindent 12 }}
+      volumes:
+        - name: global-config
+          configMap:
+            name: {{ printf "%s-global-config" (include "inboxbooster-mailer.fullname" .) }}
+        - name: custom-config
+          configMap:
+            name: {{ .Values.config.existingConfigMap }}
+        - name: tls-cert
+          secret:
+            secretName: {{ .Values.receiver.tlsCert.existingSecret.name }}
+            items:
+              - key: {{ .Values.receiver.tlsCert.existingSecret.key }}
+                path: receiver_cert.pem
+        - name: tls-key
+          secret:
+            secretName: {{ .Values.receiver.tlsKey.existingSecret.name }}
+            items:
+              - key: {{ .Values.receiver.tlsKey.existingSecret.key }}
+                path: receiver_key.pem
+      {{- if .Values.receiver.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.receiver.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.receiver.affinity }}
+      affinity:
+        {{- toYaml .Values.receiver.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.receiver.tolerations }}
+      tolerations:
+        {{- toYaml .Values.receiver.tolerations | nindent 8 }}
+      {{- end }}

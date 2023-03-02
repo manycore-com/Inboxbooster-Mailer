@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "inboxbooster-mailer.mx-server.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mx-server
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.mxServer.service.smtpPort }}
+      targetPort: smtp
+      protocol: TCP
+      name: smtp
+    - port: {{ .Values.mxServer.service.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "inboxbooster-mailer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mx-server

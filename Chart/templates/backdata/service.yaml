@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "inboxbooster-mailer.backdata.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backdata
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.backdata.service.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "inboxbooster-mailer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: backdata

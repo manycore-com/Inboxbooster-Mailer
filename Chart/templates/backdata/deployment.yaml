@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "inboxbooster-mailer.backdata.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backdata
+spec:
+  replicas: {{ .Values.backdata.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "inboxbooster-mailer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backdata
+  {{- if .Values.backdata.updateStrategy }}
+  strategy: {{- toYaml .Values.backdata.updateStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- if or .Values.podAnnotations .Values.backdata.podAnnotations }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.backdata.podAnnotations }}
+        {{- toYaml .Values.backdata.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "inboxbooster-mailer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backdata
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "inboxbooster-mailer.backdata.serviceAccountName" . }}
+      {{- if .Values.backdata.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.backdata.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backdata
+          {{- if .Values.backdata.securityContext.enabled }}
+          securityContext:
+            {{- omit .Values.backdata.securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.backdata.image.repository }}:{{ .Values.backdata.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.backdata.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backdata.service.httpPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: global-config
+              mountPath: "/configs/inboxbooster-mailer-global.yaml"
+              subPath: "inboxbooster-mailer-global.yaml"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/inboxbooster-mailer-customer.yaml"
+              subPath: "inboxbooster-mailer-customer.yaml"
+              readOnly: true
+          {{- if .Values.backdata.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backdata.livenessProbe.path }}
+              scheme: HTTP
+              port: http
+            initialDelaySeconds: {{ .Values.backdata.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backdata.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backdata.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.backdata.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.backdata.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.backdata.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backdata.readinessProbe.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.backdata.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backdata.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backdata.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.backdata.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.backdata.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.backdata.resources | nindent 12 }}
+      volumes:
+        - name: global-config
+          configMap:
+            name: {{ printf "%s-global-config" (include "inboxbooster-mailer.fullname" .) }}
+        - name: custom-config
+          configMap:
+            name: {{ .Values.config.existingConfigMap }}
+      {{- if .Values.backdata.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.backdata.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backdata.affinity }}
+      affinity:
+        {{- toYaml .Values.backdata.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.backdata.tolerations }}
+      tolerations:
+        {{- toYaml .Values.backdata.tolerations | nindent 8 }}
+      {{- end }}
