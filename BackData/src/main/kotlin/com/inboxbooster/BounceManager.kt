@@ -88,8 +88,6 @@ class BounceManager {
 
     fun post() {
         try {
-            println("BounceManager post")
-
             val separator1 = if (this.url.contains("?")) {
                 "&"
             } else {
@@ -101,8 +99,8 @@ class BounceManager {
             val hash = sha224(toHash)
             val useUrl = this.url + separator1 + "cid=" + this.cid.toString() + "&ts=" + tsNow + "&hash=" + hash
             val whatToPost = "[" + this.events.joinToString(",") + "]"
-            Logger.info("Bounce Data post to: $useUrl")
-            Logger.info("Bounce Data posting: $whatToPost")
+            Logger.info("BounceManager post to: $useUrl")
+            Logger.info("BounceManager posting: $whatToPost")
 
             workerPool.submit {
                 val client = HttpClient.newHttpClient()
