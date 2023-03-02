@@ -27,7 +27,7 @@ class MimeMessage private constructor(
         private val endOfHeadersDelimitersMaxLength =
             endOfHeadersDelimiters.maxOf(ByteArray::size)
 
-        private val uuidRegex = Regex("[a-z0-9]{40}")
+        private val uuidRegex = Regex("[a-z0-9]+")
 
         // suspending factory to be able to call parseHeaders
         suspend operator fun invoke(source: ByteReadChannel): MimeMessage =
