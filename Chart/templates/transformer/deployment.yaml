@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "inboxbooster-mailer.transformer.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: transformer
+spec:
+  replicas: {{ .Values.transformer.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "inboxbooster-mailer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: transformer
+  {{- if .Values.transformer.updateStrategy }}
+  strategy: {{- toYaml .Values.transformer.updateStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- if or .Values.podAnnotations .Values.transformer.podAnnotations }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.transformer.podAnnotations }}
+        {{- toYaml .Values.transformer.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "inboxbooster-mailer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: transformer
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "inboxbooster-mailer.transformer.serviceAccountName" . }}
+      {{- if .Values.transformer.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.transformer.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: transformer
+          {{- if .Values.transformer.securityContext.enabled }}
+          securityContext:
+            {{- omit .Values.transformer.securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.transformer.image.repository }}:{{ .Values.transformer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.transformer.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.transformer.service.httpPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: global-config
+              mountPath: "/configs/inboxbooster-mailer-global.yaml"
+              subPath: "inboxbooster-mailer-global.yaml"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/inboxbooster-mailer-customer.yaml"
+              subPath: "inboxbooster-mailer-customer.yaml"
+              readOnly: true
+            {{- range .Values.transformer.dkimCertificates.existingSecrets }}
+            - name: {{ printf "%s-%s" .name .key | lower | replace "." "-" | trunc 63 | trimSuffix "-" }}
+              mountPath: {{ printf "/configs/dkim/%s" .key | quote }}
+              subPath: {{ .key | quote }}
+              readOnly: true
+            {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "python3"
+                  - "/app/shutdown.py"
+                  - "--global-config-file=/configs/inboxbooster-mailer-global.yaml"
+                  - "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+          {{- if .Values.transformer.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.transformer.livenessProbe.path }}
+              scheme: HTTP
+              port: http
+            initialDelaySeconds: {{ .Values.transformer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.transformer.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.transformer.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.transformer.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.transformer.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.transformer.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.transformer.readinessProbe.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.transformer.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.transformer.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.transformer.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.transformer.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.transformer.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.transformer.resources | nindent 12 }}
+      volumes:
+        - name: global-config
+          configMap:
+            name: {{ printf "%s-global-config" (include "inboxbooster-mailer.fullname" .) }}
+        - name: custom-config
+          configMap:
+            name: {{ .Values.config.existingConfigMap }}
+        {{- range .Values.transformer.dkimCertificates.existingSecrets }}
+        - name: {{ printf "%s-%s" .name .key | lower | replace "." "-" | trunc 63 | trimSuffix "-" }}
+          secret:
+            secretName: {{ .name }}
+            items:
+              - key: {{ .key }}
+                path: {{ .key }}
+        {{- end }}
+      {{- if .Values.transformer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.transformer.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.transformer.affinity }}
+      affinity:
+        {{- toYaml .Values.transformer.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.transformer.tolerations }}
+      tolerations:
+        {{- toYaml .Values.transformer.tolerations | nindent 8 }}
+      {{- end }}

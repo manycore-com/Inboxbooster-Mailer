@@ -1,0 +1,40 @@
+{{- if .Values.httpReceiver.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "inboxbooster-mailer.http-receiver.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: http-receiver
+  {{- if .Values.httpReceiver.ingress.annotations }}
+  annotations:
+    {{- toYaml .Values.httpReceiver.ingress.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.httpReceiver.ingress.className }}
+  ingressClassName: {{ .Values.httpReceiver.ingress.className }}
+  {{- end }}
+  {{- if .Values.httpReceiver.ingress.tls }}
+  tls:
+    - hosts:
+        {{- range .Values.httpReceiver.ingress.hosts }}
+        - {{ .host | quote }}
+        {{- end }}
+      secretName: {{ default (printf "%s-tls" (include "inboxbooster-mailer.http-receiver.fullname" .) | trunc 63 | trimSuffix "-") .Values.httpReceiver.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    {{- range .Values.httpReceiver.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "inboxbooster-mailer.http-receiver.fullname" $ }}
+                port:
+                  number: {{ $.Values.httpReceiver.service.httpPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}

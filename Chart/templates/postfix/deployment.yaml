@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "inboxbooster-mailer.postfix.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postfix
+spec:
+  replicas: {{ .Values.postfix.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "inboxbooster-mailer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postfix
+  {{- if .Values.postfix.updateStrategy }}
+  strategy: {{- toYaml .Values.postfix.updateStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- if or .Values.podAnnotations .Values.postfix.podAnnotations }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.postfix.podAnnotations }}
+        {{- toYaml .Values.postfix.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "inboxbooster-mailer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postfix
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "inboxbooster-mailer.postfix.serviceAccountName" . }}
+      {{- if .Values.postfix.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.postfix.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: postfix
+          {{- if .Values.postfix.securityContext.enabled }}
+          securityContext:
+            {{- omit .Values.postfix.securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.postfix.image.repository }}:{{ .Values.postfix.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.postfix.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.postfix.service.httpPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: global-config
+              mountPath: "/configs/inboxbooster-mailer-global.yaml"
+              subPath: "inboxbooster-mailer-global.yaml"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/inboxbooster-mailer-customer.yaml"
+              subPath: "inboxbooster-mailer-customer.yaml"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/mailname"
+              subPath: "mailname"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/myhostname"
+              subPath: "myhostname"
+              readOnly: true
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - "python3 /app/shutdown.py --global-config-file=/configs/inboxbooster-mailer-global.yaml --customer-config-file=/configs/inboxbooster-mailer-customer.yaml > /proc/1/fd/1 2> /proc/1/fd/1"
+          {{- if .Values.postfix.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.postfix.livenessProbe.path }}
+              scheme: HTTP
+              port: http
+            initialDelaySeconds: {{ .Values.postfix.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.postfix.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.postfix.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.postfix.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.postfix.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.postfix.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.postfix.readinessProbe.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.postfix.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.postfix.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.postfix.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.postfix.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.postfix.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.postfix.resources | nindent 12 }}
+      volumes:
+        - name: global-config
+          configMap:
+            name: {{ printf "%s-global-config" (include "inboxbooster-mailer.fullname" .) }}
+        - name: custom-config
+          configMap:
+            name: {{ .Values.config.existingConfigMap }}
+      {{- if .Values.postfix.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.postfix.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.postfix.affinity }}
+      affinity:
+        {{- toYaml .Values.postfix.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.postfix.tolerations }}
+      tolerations:
+        {{- toYaml .Values.postfix.tolerations | nindent 8 }}
+      {{- end }}

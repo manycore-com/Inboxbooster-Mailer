@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-global-config" (include "inboxbooster-mailer.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+data:
+  inboxbooster-mailer-global.yaml: |
+    reliable-queue:
+      queue-names:
+        primary-queue: IB-MAIL-QUEUE-P0
+        default-queue: IB-MAIL-QUEUE-P1
+    backdata:
+      queue-name:
+        EVENT_QUEUE
+    transformer:
+      x-mailer:
+        Inboxbooster-Mailer
+    postfix:
+      incoming-queue-name:
+        INCOMING-TO-POSTFIX

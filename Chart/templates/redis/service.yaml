@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "inboxbooster-mailer.redis.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.redis.service.redisPort }}
+      targetPort: redis
+      protocol: TCP
+      name: redis
+    - port: {{ .Values.redis.service.metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "inboxbooster-mailer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: redis

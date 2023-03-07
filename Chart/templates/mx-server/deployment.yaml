@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "inboxbooster-mailer.mx-server.fullname" . }}
+  labels:
+    {{- include "inboxbooster-mailer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mx-server
+spec:
+  replicas: {{ .Values.mxServer.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "inboxbooster-mailer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mx-server
+  {{- if .Values.mxServer.updateStrategy }}
+  strategy: {{- toYaml .Values.mxServer.updateStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- if or .Values.podAnnotations .Values.mxServer.podAnnotations }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.mxServer.podAnnotations }}
+        {{- toYaml .Values.mxServer.podAnnotations | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "inboxbooster-mailer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mx-server
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "inboxbooster-mailer.mx-server.serviceAccountName" . }}
+      {{- if .Values.mxServer.podSecurityContext.enabled }}
+      securityContext:
+        {{- omit .Values.mxServer.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mx-server
+          {{- if .Values.mxServer.securityContext.enabled }}
+          securityContext:
+            {{- omit .Values.mxServer.securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.mxServer.image.repository }}:{{ .Values.mxServer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.mxServer.image.pullPolicy }}
+          ports:
+            - name: smtp
+              containerPort: {{ .Values.mxServer.service.smtpPort }}
+              protocol: TCP
+            - name: http
+              containerPort: {{ .Values.mxServer.service.httpPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: global-config
+              mountPath: "/configs/inboxbooster-mailer-global.yaml"
+              subPath: "inboxbooster-mailer-global.yaml"
+              readOnly: true
+            - name: custom-config
+              mountPath: "/configs/inboxbooster-mailer-customer.yaml"
+              subPath: "inboxbooster-mailer-customer.yaml"
+              readOnly: true
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "python3"
+                  - "/app/shutdown.py"
+                  - "--global-config-file=/configs/inboxbooster-mailer-global.yaml"
+                  - "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml"
+          {{- if .Values.mxServer.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: {{ .Values.mxServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mxServer.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.mxServer.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.mxServer.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.mxServer.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.mxServer.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: {{ .Values.mxServer.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mxServer.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.mxServer.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.mxServer.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.mxServer.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.mxServer.resources | nindent 12 }}
+      volumes:
+        - name: global-config
+          configMap:
+            name: {{ printf "%s-global-config" (include "inboxbooster-mailer.fullname" .) }}
+        - name: custom-config
+          configMap:
+            name: {{ .Values.config.existingConfigMap }}
+      {{- if .Values.mxServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.mxServer.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.mxServer.affinity }}
+      affinity:
+        {{- toYaml .Values.mxServer.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.mxServer.tolerations }}
+      tolerations:
+        {{- toYaml .Values.mxServer.tolerations | nindent 8 }}
+      {{- end }}
