@@ -64,8 +64,7 @@ class PostfixLog:
                     elif cache.status in ["deferred", "bounced", "expired"]:
                         if cache.response_code is None:
                             if "Connection timed out" in cache.status_message:
-                                #bounceType = "unroutable"
-                                bounceType = "soft"  # TODO: Temporary
+                                bounceType = "unroutable"  # was: soft
                                 logging.info("deferred with Connection timed out. Setting to soft bounce")
                             else:
                                 bounceType = None
