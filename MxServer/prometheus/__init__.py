@@ -36,6 +36,7 @@ os.mkdir(prome_stats)
 
 MXSERVER_RECEIVED_UNSUBSCRIBE = Counter('mxserver_received_unsubscribe', 'Total number of unsubscribe emails received.')
 MXSERVER_RECEIVED_SPAM = Counter('mxserver_received_spam', 'Total number of spam reports received.')
+MXSERVER_RECEIVED_AUTOREPLY = Counter('mxserver_received_autoreply', 'Total number of autoreply emails received.')
 MXSERVER_RECEIVED_UNCLASSIFIED = Counter('mxserver_received_unclassified', 'Total number of unclassified emails received.')
 MXSERVER_WARNINGS_TOTAL = Counter("mxserver_warnings", "Total number of warnings.")
 

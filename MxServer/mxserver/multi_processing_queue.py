@@ -9,9 +9,10 @@ from email.utils import parseaddr, getaddresses
 from aiosmtpd.smtp import Envelope
 from email.message import Message
 from email import message_from_bytes
-from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED, MXSERVER_WARNINGS_TOTAL, MXSERVER_RECEIVED_SPAM
+from prometheus import MXSERVER_RECEIVED_UNSUBSCRIBE, MXSERVER_RECEIVED_UNCLASSIFIED, MXSERVER_WARNINGS_TOTAL, MXSERVER_RECEIVED_SPAM, MXSERVER_RECEIVED_AUTOREPLY
 from reliable_queue import ReliableQueue
 from .abuse_analyzer import AbuseConfig, AbuseAnalyzer
+from .autoreply_analyzer import AutoreplyAnalyzer
 
 
 class MessageQueueWriter(object):
@@ -103,6 +104,8 @@ class MessageQueueWriter(object):
                     if parsed_email is None:
                         smtp_data = envelope.original_content
                         parsed_email = message_from_bytes(smtp_data)  # type: Message
+
+                if not sent_event:
                     abuse_analyzer = AbuseAnalyzer(self.abuse_config, parsed_email)
                     abuse_result = abuse_analyzer.analyze()
                     if abuse_result.is_spam_report and abuse_result.uuid is not None:
@@ -116,6 +119,22 @@ class MessageQueueWriter(object):
                         logging.info("Sending spam-report event. RCPT TO:" + str(unsub_addr) + " event=" + json.dumps(event))
                         sent_event = True
                         MXSERVER_RECEIVED_SPAM.inc()
+
+                if not sent_event:
+                    autoreply_analyzer = AutoreplyAnalyzer(parsed_email)
+                    if autoreply_analyzer.is_autoreply:
+                        event = {
+                            "event": "bounce",
+                            "uuid": autoreply_analyzer.uuid,
+                            "timestamp": int(time.time()),
+                            "ip": "",
+                            "type": "autoreply",
+                            "reason": ""
+                        }
+                        self.event_queue.push(json.dumps(event).encode("utf-8"))
+                        logging.info("Sending bounce autoreply event. RCPT TO:" + str(unsub_addr) + " event=" + json.dumps(event))
+                        sent_event = True
+                        MXSERVER_RECEIVED_AUTOREPLY.inc()
 
                 if not sent_event:
                     MXSERVER_RECEIVED_UNCLASSIFIED.inc()
