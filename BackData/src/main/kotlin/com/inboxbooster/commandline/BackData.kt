@@ -201,7 +201,7 @@ class BackData {
                 }
                 val secret = bounceManagerSection["secret"]!!
                 val bounceUrl = bounceManagerSection["url"]!!
-                println("b $cid $secret $bounceUrl")
+                
                 BounceManager(cid, secret, bounceUrl)
             } else {
                 null
