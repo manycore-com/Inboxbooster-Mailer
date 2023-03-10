@@ -120,9 +120,12 @@ class BounceManagerTest {
                 "fd": "example.dev"
             }
         """.trimIndent()
-        val bm = BounceManager(1, "apa", "http://localhost:8080")
-        bm.addEvent(JSONObject(json_str))
-        bm.post()
+        //val bm = BounceManager(1, "apa", "http://localhost:8080")
+        val bm = BounceManager(1, "apa", "http://localhost:8091")
+        for (i in 1..10000) {
+            bm.addEvent(JSONObject(json_str))
+            bm.post()
+        }
         bm.shutdown()
 
     }

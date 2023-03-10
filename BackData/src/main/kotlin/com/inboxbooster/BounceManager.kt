@@ -3,10 +3,9 @@ package com.inboxbooster
 import org.json.JSONArray
 import org.json.JSONObject
 import org.pmw.tinylog.Logger
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -22,12 +21,19 @@ class BounceManager {
     var events = mutableListOf<String>()
     var workerPool: ExecutorService
 
+    // Only for Bounce Manager.
+    val okHttpClient: OkHttpClient = OkHttpClient()
+
+    val jsonMediatype: MediaType
+
     constructor(cid: Int, secret: String, url: String) {
         this.cid = cid
         this.secret = secret
         this.url = url
 
         this.workerPool = Executors.newFixedThreadPool(4)
+
+        this.jsonMediatype = "application/json; charset=utf-8".toMediaTypeOrNull()!!
     }
 
     fun addEvent(jo: JSONObject) {
@@ -103,24 +109,19 @@ class BounceManager {
             Logger.info("BounceManager posting: $whatToPost")
 
             workerPool.submit {
-                val client = HttpClient.newHttpClient()
-                val request: HttpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(useUrl))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofByteArray(whatToPost.encodeToByteArray()))
-                    .build()
-
-                // ConnectException if target does not exist
-                var response: HttpResponse<String>? = null
+                var response: Response? = null
                 try {
-                    response = client.send(request, HttpResponse.BodyHandlers.ofString())
-                    Logger.info("Response from Eventcollector: $response")
-                } catch (e: Exception) {
-                    Logger.error(e)
-                }
-
-                if (response != null && (400 <= response.statusCode())) {
-                    Logger.error("Failed to post to Eventcollector: " + response.toString())
+                    val body: RequestBody = whatToPost.toRequestBody(jsonMediatype)
+                    val request: Request = Request.Builder()
+                        .url(useUrl)
+                        .post(body)
+                        .build()
+                    response = okHttpClient.newCall(request).execute()
+                    if (400 <= response.code) {
+                        Logger.error("Failed to post to Eventcollector: $response")
+                    }
+                } finally {
+                    response?.close()
                 }
 
             }

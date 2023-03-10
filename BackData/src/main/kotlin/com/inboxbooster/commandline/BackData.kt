@@ -3,19 +3,18 @@ package com.inboxbooster.commandline
 import com.inboxbooster.BounceManager
 import com.inboxbooster.PrometheusFeeder
 import com.inboxbooster.exceptions.EventPostError
-import org.pmw.tinylog.Logger
 import com.inboxbooster.reliablequeue.ReliableQueue
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import org.pmw.tinylog.Logger
 import org.yaml.snakeyaml.Yaml
-import java.io.File
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import redis.clients.jedis.exceptions.JedisException
+import java.io.File
 
 class BackData {
 
@@ -28,6 +27,12 @@ class BackData {
     val queueName: String
 
     val bounceManager: BounceManager?
+
+    // For all non Bounce Manager events.
+    val okHttpClient: OkHttpClient = OkHttpClient()
+
+    val jsonMediatype: MediaType
+
     constructor(redisHost: String, redisPort: Int, queueName: String, postUrl: String, maxAgeToRetry: Long, bounceManager: BounceManager?) {
         this.reliableQueue = null
         this.postUrl = postUrl
@@ -38,6 +43,8 @@ class BackData {
         this.queueName = queueName
 
         this.bounceManager = bounceManager
+
+        this.jsonMediatype = "application/json; charset=utf-8".toMediaTypeOrNull()!!
     }
 
     fun execute() {
@@ -100,27 +107,23 @@ class BackData {
 
                 if (null != payload) {
                     Logger.info("Posting " + events?.size + " events: $payload")
-                    val client = HttpClient.newHttpClient()
-                    val request: HttpRequest = HttpRequest.newBuilder()
-                        .uri(URI.create(this.postUrl))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofByteArray(payload.encodeToByteArray()))
-                        .build()
-                    // ConnectException if target does not exist
-                    var response: HttpResponse<String>?
+                    var response: Response? = null
                     try {
-                        PrometheusFeeder.numberOfEventsCurrentlyPosting.inc(events!!.size.toDouble())
-                        response = client.send(request, HttpResponse.BodyHandlers.ofString())
-                        Logger.info("Response: $response")
+                        val body: RequestBody = payload.toRequestBody(jsonMediatype)
+                        val request: Request = Request.Builder()
+                            .url(this.postUrl)
+                            .post(body)
+                            .build()
+                        response = okHttpClient.newCall(request).execute()
                     } finally {
-                        PrometheusFeeder.numberOfEventsCurrentlyPosting.dec(events!!.size.toDouble())
+                        response?.close()
                     }
                     // TODO differentiate between 4xx and 5xx
-                    if (400 <= response!!.statusCode()) {
+                    if (400 <= response!!.code) {
                         PrometheusFeeder.failedPushedEventsCounter.inc(events!!.size.toDouble())
                         throw EventPostError(
-                            "Failed to post events. status=" + response.statusCode(),
-                            response.statusCode()
+                            "Failed to post events. status=" + response.code,
+                            response.code
                         )
                     } else {
                         PrometheusFeeder.successfullyPushedEventsCounter.inc(events!!.size.toDouble())

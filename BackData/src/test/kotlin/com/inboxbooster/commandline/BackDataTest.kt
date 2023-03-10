@@ -1,11 +1,15 @@
 package com.inboxbooster.commandline
 
 import com.inboxbooster.reliablequeue.ReliableQueue
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import org.junit.jupiter.api.Test
-import org.yaml.snakeyaml.Yaml
-import java.io.File
 import org.pmw.tinylog.Level
 import org.pmw.tinylog.Logger
+import org.yaml.snakeyaml.Yaml
+import java.io.File
 
 class BackDataTest {
 
@@ -35,6 +39,29 @@ class BackDataTest {
         )
 
         BackData.main(args.toTypedArray())
+    }
+
+    @Test
+    fun `test okhttp2`() {
+        Logger.getConfiguration().level(Level.DEBUG).activate()
+        val jsonMediatype: MediaType = "application/json; charset=utf-8".toMediaTypeOrNull()!!
+        val okHttpClient: OkHttpClient = OkHttpClient()
+
+        val jo = JSONObject()
+        jo.put("event", "bounce")
+
+        val body: RequestBody = jo.toString().toRequestBody(jsonMediatype) // new
+
+        // RequestBody body = RequestBody.create(JSON, json); // old
+        // RequestBody body = RequestBody.create(JSON, json); // old
+        val request: Request = Request.Builder()
+            .url("http://localhost:8090")
+            .post(body)
+            .build()
+        val response: Response = okHttpClient.newCall(request).execute()
+        println(response.code)
+        println(response)
+
     }
 
 }
