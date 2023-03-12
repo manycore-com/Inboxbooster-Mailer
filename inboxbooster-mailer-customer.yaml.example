@@ -1,4 +1,8 @@
 receiver:
+  # Note:
+  # receiver assumes /configs/receiver_cert.pem and
+  # /configs/receiver_key.pem exists.
+  # See Receiver/certs/README.md for more info.
   bind:
     inet-interface: localhost
     inet-port: 8025
