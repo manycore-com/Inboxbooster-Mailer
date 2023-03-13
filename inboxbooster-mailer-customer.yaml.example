@@ -57,6 +57,9 @@ transformer:
     inet-interface: 0.0.0.0
     inet-port: 9092
 postfixlog:
+  # Note: The config map also needs files for Postfix
+  #  /configs/myhostname content sets value of myhostname in main.cf
+  #  /configs/mailname
   logfile: /var/log/mail.log
   reliable-queue:
     redis:

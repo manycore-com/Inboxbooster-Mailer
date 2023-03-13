@@ -64,6 +64,12 @@ This file has settings you probably need to alter.
    - Posts the event to endpoint defined in
      [inboxbooster-mailer-customer.yaml](inboxbooster-mailer-customer.yaml.example):backdata/post-url
 
+# Monitoring
+## Prometheus
+The pods have prometheus endpoints prepared. To make use of them you need the 
+[https://github.com/prometheus-operator/prometheus-operator](Prometheus Operator)
+installed.
+
 # Deployment
 ## 1. Redis
 Start with redis. All the other modules requires Redis as the backbone queue.
@@ -79,7 +85,8 @@ To configure the services, please run
 ```shell
 kubectl create -f Redis/service.yaml
 ```
-To configure the Prometheus endpoint, please run
+
+Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus ServiceMonitor:
 ```shell
 kubectl create -f Redis/serviceMonitor.yml
 ```
@@ -94,8 +101,13 @@ kubectl create -f BackData/pod.yaml
 Even if Backdata only polls data from Redis, we still need to configure the Prometheus port:
 ```shell
 kubectl create -f BackData/service.yaml
+```
+
+Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus ServiceMonitor:
+```shell
 kubectl create -f BackData/serviceMonitor.yml
 ```
+
 ## 3. MxServer
 Thirdly, start the MxServer. It is a good idea to verify you can connect to this server
 on port 25, and the address you connect to is the DNS's MX record for your return-path-domain that
@@ -115,6 +127,10 @@ kubectl create -f MxServer/pod.yaml
 MxServer provides both a public smtp listener at port 25, and a Prometheus endpoint.
 ```shell
 kubectl create -f MxServer/service.yaml
+```
+
+Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus ServiceMonitor:
+```shell
 kubectl create -f MxServer/serviceMonitor.yml
 ```
 
@@ -136,6 +152,10 @@ kubectl create -f PostfixLog/pod.yaml
 Postfix also has a Prometheus endpoint.
 ```shell
 kubectl create -f PostfixLog/service.yaml
+```
+
+Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus ServiceMonitor:
+```shell
 kubectl create -f PostfixLog/serviceMonitor.yml
 ```
 
@@ -151,6 +171,10 @@ kubectl create -f Transformer/pod.yaml
 Transformer also has a Prometheus endpoint.
 ```shell
 kubectl create -f Transformer/service.yaml
+```
+
+Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus ServiceMonitor:
+```shell
 kubectl create -f Transformer/serviceMonitor.yml
 ```
 
@@ -166,6 +190,10 @@ kubectl create -f Receiver/pod.yaml
 Receiver has both a Prometheus endpoint and a public port.
 ```shell
 kubectl create -f Receiver/service.yaml
+```
+
+Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus ServiceMonitor:
+```shell
 kubectl create -f Receiver/serviceMonitor.yml
 ```
 
