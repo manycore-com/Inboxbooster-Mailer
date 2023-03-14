@@ -197,6 +197,87 @@ Optionally, if the Prometheus CRDs are installed, you can configure a Prometheus
 kubectl create -f Receiver/serviceMonitor.yml
 ```
 
+# Open ports to the public
+## MxServer
+
+```shell
+kubectl create -f MxServer/serviceLoadBalancer.yaml
+```
+
+This opens port 25 and listens for
+* Async bounces
+* Unsubscribe requests
+* Spam reports
+
+Note: Currently unhandled mails are saved in tmp/ directory. This includes spam relay
+attempts.
+
+Note: You must under no circumstances open port 25 on the Postfix pod!
+It's an open relay and it will fry your reputation permanently in minutes!
+
+## Receiver
+Optional: You can use Receiver, HttpReceiver or both to send emails.
+
+```shell
+kubectl create -f Receiver/serviceLoadBalancer.yaml
+```
+
+This opens port 587.
+
+## HttpReceiver
+Optional: You can use Receiver, HttpReceiver or both to send emails.
+
+To use HttpReceiver, you need to configure a reverse proxy in front of it and put the
+ssl certificate there.
+
+# Domain Settings
+You need to add the dkim public key. The selector is configurable, but here we call it "mailer".
+```shell
+mailer._domainkey 3600 IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCx1VRynuum5cOkpBxIChqRTua0SPjnX119JTeUS2pfhz78LESOKri/GPhYgQ7ts4I2JBbRlrHwAPd+3SGwd88+4KLKky/uZKXQeVPKkoBoKvBSDrmDNdnUEeIQVy9qFEMopkWygk69Nu5DeoAINwr2Mf60vWivvPiwYhHnM/9EPQIDAQAB"
+```
+You need to add an MX record back to the MxServer for every return path domain you specified in
+[inboxbooster-mailer-customer.yaml/transformer/domain/settings](inboxbooster-mailer-customer.yaml.example).
+
+```shell
+@ 3600 IN MX 1 out-0.example.com.
+```
+The configs/myhostname name is used in HELO and needs to be resolvable.
+Set it to the mxserver's address. Example below assumes you have 
+called myhostname out-0.example.com.
+
+```shell
+out-0 3600 IN A 34.1.2.3
+```
+
+You need to set the address for Receiver and HttpReceiver, depending on your needs.
+```shell
+receiver 3600 IN A 34.1.2.4
+```
+
+# Testing
+## MxServer
+You need to be able to reach MxServer port 25 from outside the internet.
+
+Note: Most ISP blocks outgoing connections to port 25. To test if you're on a 
+machine where it's possible, try a host we know works. Example
+
+```shell
+(base) meng@aGcpVm:~$ telnet aspmx.l.google.com 25
+Trying 74.125.69.27...
+Connected to aspmx.l.google.com.
+Escape character is '^]'.
+220 mx.google.com ESMTP z5-20020a02cea5000000b003a076a64d13si2623811jaq.97 - gsmtp
+QUIT
+221 2.0.0 closing connection z5-20020a02cea5000000b003a076a64d13si2623811jaq.97 - gsmtp
+Connection closed by foreign host.
+```
+
+If that works, try to connect to your mxserver.
+
+## Receiver
+Receiver is also SMTP based, but usually on port 587 so it should be reachable everywhere.
+
+
 # Termination
 ## 1. Receiver/HttpReceiver
 Start in the receiving end to ensure no new emails are received.
