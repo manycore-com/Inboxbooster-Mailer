@@ -34,6 +34,7 @@ transformer:
       hostname: localhost
       port: 6379
   # Feel free to add multiple dkim configurations.
+  # Return path domain can be the same for all sender domains. It just needs to have an MX entry.
   domain-settings:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
@@ -78,6 +79,7 @@ mxserver:
     inet-port: 8026
   eml-directory:
     tmp
+  # You need to configure abuse address with Yahoo.
   abuse:
     yahoo:
       to: "example@example.com"
@@ -93,11 +95,15 @@ backdata:
     redis:
       hostname: localhost
       port: 6379
+  # If configured, you'll receive events (delivered, bounce, error, spam-report, unsubscribe).
+  # For legal reasons, you need to listen to unsubscribe events and spam-reports, else you
+  # might get blocked.
   post-url: "http://localhost:8090"
-  bounce-manager:
-    secret: apa
-    cid: 1
-    url: "http://localhost:8091"
+  # This is an endpoint for bounce and delivered data for deliverability measures.
+  #bounce-manager:
+  #  secret: apa
+  #  cid: 1
+  #  url: "http://localhost:8091"
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9095
@@ -111,6 +117,10 @@ redis:
     inet-interface: 0.0.0.0
     inet-port: 9096
 common-config:
+  # If configured, Redis saves it state here if restarted.
+  # If Postfix is restarted, it pushes its current queue to Redis.
+  # It's a good idea to configure this.
+  # Currently only the s3 protocol is supported.
   object-storage:
     type: s3
     bucket: testbucket

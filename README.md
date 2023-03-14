@@ -1,6 +1,8 @@
 # Manycore-Mail
 Cloud native Open Source MTA.
 
+[An installation walkthrough for the GKE environment if you want to test quickly](README-GKE-EXAMPLE.md)
+
 # Configuration
 The configuration assumes a config-map called **inboxbooster-config** exists.
 
@@ -18,13 +20,21 @@ kubectl create configmap inboxbooster-config \
 <sup>Example of creating a config-map.</sup>
 
 
+## [Email Headers](README-EMAIL-HEADERS.md)
+Some settings are dynamic and are sent per mail. They are added to
+the email headers.
+
+
+
 ## [inboxbooster-mailer-global.yaml](inboxbooster-mailer-global.yaml.example)
 This file has settings you should not normally have to alter.
 
 
 ## [inboxbooster-mailer-customer.yaml](inboxbooster-mailer-customer.yaml.example)
-This file has settings you probably need to alter.
+This file has settings you need to alter.
 
+Note: you need to listen to [incoming events](README-EVENTS.md) and act accordingly.
+The unsubscribe and spam-report events are an absolute necessity to honor.
 
 # Modules
 1. [Redis](Redis) 
@@ -231,7 +241,7 @@ To use HttpReceiver, you need to configure a reverse proxy in front of it and pu
 ssl certificate there.
 
 # Domain Settings
-You need to add the dkim public key. The selector is configurable, but here we call it "mailer".
+You need to add the dkim *public* key. The selector name is configurable, but here we call it "mailer".
 ```shell
 mailer._domainkey 3600 IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCx1VRynuum5cOkpBxIChqRTua0SPjnX119JTeUS2pfhz78LESOKri/GPhYgQ7ts4I2JBbRlrHwAPd+3SGwd88+4KLKky/uZKXQeVPKkoBoKvBSDrmDNdnUEeIQVy9qFEMopkWygk69Nu5DeoAINwr2Mf60vWivvPiwYhHnM/9EPQIDAQAB"
 ```
@@ -239,14 +249,14 @@ You need to add an MX record back to the MxServer for every return path domain y
 [inboxbooster-mailer-customer.yaml/transformer/domain/settings](inboxbooster-mailer-customer.yaml.example).
 
 ```shell
-@ 3600 IN MX 1 out-0.example.com.
+@ 3600 IN MX 1 mxserver.example.com.
 ```
 The configs/myhostname name is used in HELO and needs to be resolvable.
 Set it to the mxserver's address. Example below assumes you have 
-called myhostname out-0.example.com.
+called myhostname mxserver.example.com.
 
 ```shell
-out-0 3600 IN A 34.1.2.3
+mxserver 3600 IN A 34.1.2.3
 ```
 
 You need to set the address for Receiver and HttpReceiver, depending on your needs.
