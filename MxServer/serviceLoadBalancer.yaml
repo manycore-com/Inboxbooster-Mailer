@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "mxserver-loadbalancer"
+spec:
+  type: LoadBalancer
+  selector:
+    app: "mxserver"
+  ports:
+    - protocol: "TCP"
+      port: 25
+      targetPort: 25
+      name: public-mxserver-port

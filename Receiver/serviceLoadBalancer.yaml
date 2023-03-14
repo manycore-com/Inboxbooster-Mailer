@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "receiver-loadbalancer"
+spec:
+  type: LoadBalancer
+  selector:
+    app: "receiver"
+  ports:
+    - protocol: "TCP"
+      port: 587
+      targetPort: 587
+      name: public-receiver-port
