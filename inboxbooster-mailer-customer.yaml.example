@@ -25,10 +25,6 @@ transformer:
   email-headers:
     inject:
       List-Unsubscribe: "<mailto:unsub-{{uuid}}@{{from-domain}}>"
-  # TODO remove
-  postfix:
-    hostname: localhost
-    port: 8027
   reliable-queue:
     redis:
       hostname: localhost
