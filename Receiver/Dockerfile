@@ -7,6 +7,16 @@ FROM python:3.10-bullseye
 
 WORKDIR /app
 
+COPY startscript.sh .
+RUN chmod 755 /app/startscript.sh
+
+RUN apt-get update \
+  && apt-get -qq -y upgrade \
+  && apt-get clean \
+  && apt-get -qq -y autoclean  \
+  && apt-get -qq -y autoremove \
+  && rm -rf /var/cache/apt/archives/* /var/cache/apt/*.bin /var/lib/apt/lists/*
+
 COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
@@ -20,9 +30,5 @@ COPY *.py /app/
 
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_RECEIVER
 ENV PYTHONUNBUFFERED=1
-CMD [ "python3", "main.py", \
-  "--global-config-file=/configs/inboxbooster-mailer-global.yaml", \
-  "--customer-config-file=/configs/inboxbooster-mailer-customer.yaml", \
-  "--tls-cert-filename=/configs/receiver_cert.pem", \
-  "--tls-key-filename=/configs/receiver_key.pem" ]
+CMD [ "/bin/bash", "startscript.sh"]
 
