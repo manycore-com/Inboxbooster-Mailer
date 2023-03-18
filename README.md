@@ -6,6 +6,9 @@ Cloud native Open Source MTA.
 # Configuration
 The configuration assumes a config-map called **inboxbooster-config** exists.
 
+Note: if you omit receiver_cert.pem and receiver_key.pem, 
+the startscript will create self signed keys.
+
 ```shell
 kubectl create configmap inboxbooster-config \
   --from-file inboxbooster-mailer-global.yaml \
@@ -17,7 +20,7 @@ kubectl create configmap inboxbooster-config \
   --from-file dkim/dkim-private-key-example.com.pem \
   --from-file dkim/dkim-private-key-bexample.com.pem
 ```
-<sup>Example of creating a config-map.</sup>
+<sup>Example of creating a config-map *with* provided TLS keys.</sup>
 
 
 ## [Email Headers](README-EMAIL-HEADERS.md)
@@ -77,10 +80,14 @@ The unsubscribe and spam-report events are an absolute necessity to honor.
 # Monitoring
 ## Prometheus
 The pods have prometheus endpoints prepared. To make use of them you need the 
-[https://github.com/prometheus-operator/prometheus-operator](Prometheus Operator)
+[Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator)
 installed.
 
 # Deployment
+
+# Configmap
+The configmap inboxbooster-config needs to exist and be created according to above.
+
 ## 1. Redis
 Start with redis. All the other modules requires Redis as the backbone queue.
 

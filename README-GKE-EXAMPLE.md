@@ -102,15 +102,13 @@ You are sending your mails, is the DKIM.
 
 # Optional: Receiver certificates
 If you'll use the Receiver module (if you want to send mails using SMTP), you need
-certificates for TLS.
+certificates for TLS. If you don't provide any TLS files for Receiver in the
+configmap, it will create a self-signed certificate:
 
 ```shell
 cd ~/example.com
 openssl req -x509 -newkey rsa:4096 -keyout receiver-key.pem -out receiver-cert.pem -days 365 -nodes -subj '/CN=localhost'
 ```
-These files are not strictly for example.com. You can configure any number of domains you want to
-use and use the same TLS certificate.
-
 
 # [inboxbooster-mailer-global.yaml](inboxbooster-mailer-global.yaml.example)
 This file is for static settings that you normally should not have to touch.
@@ -262,6 +260,32 @@ common-config:
     secret-access-key: testsecret
     endpoint-url: https://s3.us-east-1.amazonaws.com
 ```
+
+# inboxbooster-configmap
+```shell
+kubect create configmap inboxbooster-config \
+  --from-file inboxbooster-mailer-customer.yaml \
+  --from-file inboxbooster-mailer-global.yaml \
+  --from-file dkim/dkim-example.com.pem \
+  --from-file myhostname \
+  --from-file mailname \
+  -o yaml --dry-run=client | kubect apply -f -
+```
+
+If you want to provive certificates for the receiver:
+
+```shell
+kubect create configmap inboxbooster-config \
+  --from-file inboxbooster-mailer-customer.yaml \
+  --from-file inboxbooster-mailer-global.yaml \
+  --from-file dkim/dkim-supervm.io.pem \
+  --from-file receiver_cert.pem \
+  --from-file receiver_key.pem \
+  --from-file myhostname \
+  --from-file mailname \
+  -o yaml --dry-run=client | kubect apply -f -
+```
+
 
 # Starting the pods
 We provide [helm charts](https://github.com/manycore-com/Inboxbooster-Mailer/tree/main/Chart),
