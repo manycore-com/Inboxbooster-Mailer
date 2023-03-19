@@ -30,17 +30,20 @@ transformer:
       hostname: localhost
       port: 6379
   # Feel free to add multiple dkim configurations.
-  # Return path domain can be the same for all sender domains. It just needs to have an MX entry.
+  # Return path domain can be the same for all sender domains. It just needs to have an DNS MX entry
+  # leading to the mxserver.
+  # Note: if you want to use example.com with personal gmail accounts, and use Inboxbooster-Mailer for the rest,
+  # make sure you set a return-path-domain that will not collide with MX records for gmail/outlook/etc.
   domain-settings:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
-     return-path-domain: mxserver.example.com
+     return-path-domain: example.com
      selector: mailer
      # beacon-url is totally optional.
      beacon-url: "http://localhost:8090/abc/{{ stream-id }}.gif"
    - domain: bexample.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
-     return-path-domain: mxserver.example.com
+     return-path-domain: example.com
      selector: mailer
   # This will change in next version, but for now:
   # feedback-id will be campaign:customer:mailtype:{uuid}
@@ -65,21 +68,24 @@ postfixlog:
   postfix:
     # run test_dummy_postfix.sh to have a dummy responder for test.
     hostname: localhost
-    port: 8026
+    port: 25
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9093
   string-replacer:
     main-cf:
       # is used in HELO and needs to be resolvable with some ISP, else it will bounce.
-      # It doesn't have to be the same as the domain you send from.
+      # It doesn't have to be the same as the domain you send from. Point it to the same
+      # place as mxserver.
       # If you have a /configs/myhostname file, its content will be used if this entry is not set.
       myhostname: mxserver.example.com
       # main.cf's mailname needs to have an MX entry in your dns, preferably to where mxserver listens.
-      mailname: mxserver.example.com
+      # We construct messageid and return-path from the transformer/domain-settings/return-path-domain
+      # so this value is not as important as in a normal Postfix installation.
+      mailname: example.com
     # If no entry, default port 25 will be used.
     master-cf:
-      smtpd-port: 8026
+      smtpd-port: 25
 mxserver:
   bind:
     inet-interface: localhost

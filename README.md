@@ -26,12 +26,16 @@ kubectl create configmap inboxbooster-config \
 ## myhostname
 The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/myhostname](inboxbooster-mailer-customer.yaml.example)
 (OR the depricated way as content in file configs/myhostname) name is used in HELO and needs
-to be resolvable or some ISP will reject your email.
+to be resolvable or some ISP will reject your email. 
+Set it to the same address as mxserver.
 
 ## mailname
 The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/mailname](inboxbooster-mailer-customer.yaml.example)
-(OR the depricated way as content in file /configs/mailname) should be your domain.
-It needs a MX entry in your DNS. Point this MX entry to mxserver.
+(OR the depricated way as content in file /configs/mailname) should be an MX entry
+in your dns, preferably to where mxserver listens.
+We construct messageid and return-path from the 
+[transformer/domain-settings/return-path-domain](inboxbooster-mailer-customer.yaml.example)
+this value is not as important as in a normal Postfix installation.
 
 ## dkim
 Your can put Inboxbooster-Mailer on any domain you want (the receiver

@@ -164,7 +164,9 @@ transformer:
       hostname: redis
       port: 6379
   # Feel free to add multiple dkim configurations.
-  # Return path domain can be the same for all sender domains. It just needs to have an MX entry.
+  # Return path domain can be the same for all sender domains. It just needs to have an MX entry leading to mxserver.
+  # Note: if you want to use example.com with personal gmail accounts, and use Inboxbooster-Mailer for the rest,
+  # make sure you set a return-path-domain that will not collide with MX records for gmail/outlook/etc. 
   domain-settings:
    - domain: example.com
      dkim-private-key-file: /configs/dkim-example.com.pem
@@ -200,6 +202,9 @@ postfixlog:
       # It doesn't have to be the same as the domain you send from.
       # If you have a /configs/myhostname file, its content will be used if this entry is not set.
       myhostname: example.com
+      # main.cf's mailname needs to have an MX entry in your dns, preferably to where mxserver listens.
+      # We construct messageid and return-path from the transformer/domain-settings/return-path-domain
+      # so this value is not as important as in a normal Postfix installation.
       mailname: example.com
     master-cf:
       smtpd-port: 26
