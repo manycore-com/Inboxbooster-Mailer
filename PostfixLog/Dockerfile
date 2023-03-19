@@ -16,6 +16,7 @@ RUN apt-get update \
   && apt-get -qq -y install psmisc \
   && apt-get -qq -y install telnet \
   && apt-get -qq -y install curl \
+  && apt-get -qq -y install net-tools \
   && apt-get clean \
   && apt-get -qq -y autoclean  \
   && apt-get -qq -y autoremove \

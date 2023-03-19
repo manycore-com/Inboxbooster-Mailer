@@ -1,15 +1,25 @@
 #!/bin/bash
 
-cp /configs/mailname /etc/mailname
+python3 replace_string_in_files.py --customer-config-file=/configs/inboxbooster-mailer-customer.yaml
+
+if [ -f /configs/mailname ]; then
+    cp /configs/mailname /etc/mailname
+else
+    echo "No mailname file found in /configs, trying mailname in inboxbooster-mailer-customer.yaml"
+fi
+
 postalias /etc/aliases
 postmap /etc/postfix/transport.map
-export RUNME="sed -i 's/MYHOSTNAME_REPLACEME/"`cat /configs/myhostname`"/' /etc/postfix/main.cf"
-eval $RUNME
+
+if [ -f /configs/myhostname ]; then
+    export RUNME="sed -i 's/MYHOSTNAME_REPLACEME/"`cat /configs/myhostname`"/' /etc/postfix/main.cf"
+    eval $RUNME
+else
+    echo "No myhostname file found in /configs, trying myhostname in inboxbooster-mailer-customer.yaml"
+fi
 service syslog-ng start
 service postfix start
 
-echo mailname `cat /configs/mailname`
-echo myhostname `cat /configs/myhostname`
 sleep 2
 ps -ef |grep postfix
 

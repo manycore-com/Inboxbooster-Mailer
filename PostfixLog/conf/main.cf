@@ -1,11 +1,6 @@
 # See /usr/share/postfix/main.cf.dist for a commented, more complete version
 
 
-# Debian specific:  Specifying a file name will cause the first
-# line of that file to be used as the name.  The Debian default
-# is /etc/mailname.
-#myorigin = /etc/mailname
-
 smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)
 biff = no
 
@@ -37,6 +32,9 @@ smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_una
 myhostname = MYHOSTNAME_REPLACEME
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
+# Debian specific:  Specifying a file name will cause the first
+# line of that file to be used as the name.  The Debian default
+# is /etc/mailname.
 myorigin = /etc/mailname
 mydestination = $myhostname, snat-0, localhost.localdomain, localhost
 relayhost = 
@@ -46,7 +44,7 @@ recipient_delimiter = +
 # Danger! Never have an open relay on the internet! You will burn your
 # ip address in minutes.
 # Here it is ok because it is inside a Kubernetes pod.
-inet_interfaces = all
+inet_interfaces = localhost
 inet_protocols = ipv4
 maximal_queue_lifetime = 12h
 

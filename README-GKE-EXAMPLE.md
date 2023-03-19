@@ -79,26 +79,15 @@ We're using Postfix as an open relay internally in the mailer.
 It needs two configuration files.
 
 ## myhostname
-This needs to be a resolvable hostname.
-It's used in HELO, and some ISP checks if it exists and possibly connects to it.
-Set the content of this file to 
+We'll set this in [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/myhostname](inboxbooster-mailer-customer.yaml.example)
 
-out-0.example.com
+Set this to mxserver.example.com. It's used by Postfix for HELO, and if
+it can't be resolved some ISP will reject the mail.
 
 ## mailname
-Set the content of this file to
+We'll set this in [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/mailname](inboxbooster-mailer-customer.yaml.example)
 
-example.com
-
-```shell
-cd ~/example.com
-echo out-0.example.com > myhostname
-echo example.com > mailname
-```
-
-Note: They don't have to have anything to do with example.com, it's just convenience
-as we're poking in the example.com DNS in this example. Again, what validates that
-You are sending your mails, is the DKIM.
+This name needs a DNS MX entry. Set it to mail.example.com.
 
 # Optional: Receiver certificates
 If you'll use the Receiver module (if you want to send mails using SMTP), you need
@@ -204,6 +193,16 @@ postfixlog:
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9090
+  string-replacer:
+    main-cf:
+      # main.cf's myhostname needs to have an MX entry in your dns, preferably to where mxserver listens.
+      # is used in HELO and needs to be resolvable with some ISP, else it will bounce.
+      # It doesn't have to be the same as the domain you send from.
+      # If you have a /configs/myhostname file, its content will be used if this entry is not set.
+      myhostname: example.com
+      mailname: example.com
+    master-cf:
+      smtpd-port: 26
 mxserver:
   bind:
     inet-interface: 0.0.0.0

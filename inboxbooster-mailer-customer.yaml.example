@@ -34,13 +34,13 @@ transformer:
   domain-settings:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
-     return-path-domain: example.com
+     return-path-domain: mxserver.example.com
      selector: mailer
      # beacon-url is totally optional.
      beacon-url: "http://localhost:8090/abc/{{ stream-id }}.gif"
    - domain: bexample.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
-     return-path-domain: example.com
+     return-path-domain: mxserver.example.com
      selector: mailer
   # This will change in next version, but for now:
   # feedback-id will be campaign:customer:mailtype:{uuid}
@@ -69,6 +69,17 @@ postfixlog:
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9093
+  string-replacer:
+    main-cf:
+      # is used in HELO and needs to be resolvable with some ISP, else it will bounce.
+      # It doesn't have to be the same as the domain you send from.
+      # If you have a /configs/myhostname file, its content will be used if this entry is not set.
+      myhostname: mxserver.example.com
+      # main.cf's mailname needs to have an MX entry in your dns, preferably to where mxserver listens.
+      mailname: mxserver.example.com
+    # If no entry, default port 25 will be used.
+    master-cf:
+      smtpd-port: 8026
 mxserver:
   bind:
     inet-interface: localhost

@@ -5,9 +5,10 @@ Cloud native Open Source MTA.
 
 # Configuration
 The configuration assumes a config-map called **inboxbooster-config** exists.
+The configmap is assumed to be mounted as /configs.
 
 Note: if you omit receiver_cert.pem and receiver_key.pem, 
-the startscript will create self signed keys.
+the startscript.sh in Receiver will create self-signed keys.
 
 ```shell
 kubectl create configmap inboxbooster-config \
@@ -20,14 +21,54 @@ kubectl create configmap inboxbooster-config \
   --from-file dkim/dkim-private-key-example.com.pem \
   --from-file dkim/dkim-private-key-bexample.com.pem
 ```
-<sup>Example of creating a config-map *with* provided TLS keys.</sup>
+<sup>Example of creating a config-map *with* provided TLS keys, myhostname, and mailname.</sup>
 
+## myhostname
+The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/myhostname](inboxbooster-mailer-customer.yaml.example)
+(OR the depricated way as content in file configs/myhostname) name is used in HELO and needs
+to be resolvable or some ISP will reject your email.
+
+## mailname
+The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/mailname](inboxbooster-mailer-customer.yaml.example)
+(OR the depricated way as content in file /configs/mailname) should be your domain.
+It needs a MX entry in your DNS. Point this MX entry to mxserver.
+
+## dkim
+Your can put Inboxbooster-Mailer on any domain you want (the receiver
+address, and mxserver address), but you need to have a DKIM entry per
+domain you want to send from.
+
+In recent years, reputation has been moved from the IP address of the mail server to the domain.
+That's the very reason this product exist.
+
+You sign your emails with an encryption hash, and you provide a mail header with the hash and
+a TXT entry in your DNS so receiving end can verify that the email is from you.
+
+Please use openssl 1.1.1 (for example the one installed in the conda environment).
+
+Go to ~/example.com and create the DKIM keys.
+```shell
+mkdir -p ~/example.com/dkim
+cd ~/example.com/dkim
+openssl genrsa -out dkim-example.com.pem 1024
+openssl rsa -in dkim-example.com.pem -out dkim-example.com.pub -pubout
+```
+
+We'll explain in the dkim section below what to add to the DNS.
+
+## receiver_cert.pem and receiver_key.pem
+If there exists no certificate in the configmap for the receiver, it will
+create a self-signed certificate
+
+openssl req -x509 -newkey rsa:4096 -keyout tlskey.pem -out tlscert.pem -days 365 -nodes -subj '/CN=localhost'
+
+If you want to provide your own certificate, you need to add these files
+(receiver_cert.pem and receiver_key.pem)
+to the configmap.
 
 ## [Email Headers](README-EMAIL-HEADERS.md)
-Some settings are dynamic and are sent per mail. They are added to
-the email headers.
-
-
+Some settings are dynamic and are set per mail. They are added to
+the [Email Headers](README-HEADERS.md).
 
 ## [inboxbooster-mailer-global.yaml](inboxbooster-mailer-global.yaml.example)
 This file has settings you should not normally have to alter.
@@ -38,6 +79,8 @@ This file has settings you need to alter.
 
 Note: you need to listen to [incoming events](README-EVENTS.md) and act accordingly.
 The unsubscribe and spam-report events are an absolute necessity to honor.
+It's a legal requirement, and deliverability will also suffer greatly 
+if you ignore them.
 
 # Modules
 1. [Redis](Redis) 
@@ -258,7 +301,10 @@ You need to add an MX record back to the MxServer for every return path domain y
 ```shell
 @ 3600 IN MX 1 mxserver.example.com.
 ```
-The configs/myhostname name is used in HELO and needs to be resolvable.
+The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/myhostname](inboxbooster-mailer-customer.yaml.example)
+OR content in file configs/myhostname name is used in HELO and needs
+to be resolvable.
+
 Set it to the mxserver's address. Example below assumes you have 
 called myhostname mxserver.example.com.
 
@@ -293,7 +339,6 @@ If that works, try to connect to your mxserver.
 
 ## Receiver
 Receiver is also SMTP based, but usually on port 587 so it should be reachable everywhere.
-
 
 # Termination
 ## 1. Receiver/HttpReceiver
