@@ -109,6 +109,8 @@ class PostfixLog:
                 logging.error("Error. Will send error event.", exc_info=True, stack_info=True)
 
     def shutdown(self):
-        logging.info("PostfixLog: shutdown called")
+        logging.info("PostfixLog: shutdown called. Terminating process pid=" + str(self.process.pid))
         self.process.terminate()
+        logging.info("PostfixLog: shutdown called (after terminate)")
         self.process.join()
+        logging.info("PostfixLog: shutdown done")

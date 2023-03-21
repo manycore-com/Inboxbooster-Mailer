@@ -114,7 +114,7 @@ if __name__ == "__main__":
         customer_config = yaml.safe_load(file)  # dict
 
     logging.info("Sending SIGQUIT to Log Analyzer")
-    os.system("killall tail")
+    os.system("pkill -f \"tail -F /var/log/mail.log\"")
 
     logging.info("Running: /usr/sbin/postfix stop")
     os.system("/usr/sbin/postfix stop")

@@ -154,6 +154,8 @@ class PostfixPoller:
                         logging.error(ex, exc_info=True, stack_info=True)
         logging.info("PostfixLog: shutting down prometheus endpoint")
         stop_prometheus_endpoint()
+        logging.info("PostfixLog: done shutting down prometheus endpoint")
+        logging.info("PostfixLog: exiting event loop")
 
     # Called from process starting this object.
     def shutdown(self):

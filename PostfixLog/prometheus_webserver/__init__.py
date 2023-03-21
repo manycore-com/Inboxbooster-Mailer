@@ -80,6 +80,10 @@ def start_prometheus_endpoint(prometheus_inet_interface, prometheus_inet_port):
 def stop_prometheus_endpoint():
     global process  # type: Process
     if process is not None:
+        logging.info("Postfix: Found prometheus process pid=" + str(process.pid) + " Stopping it")
         os.kill(process.pid, signal.SIGINT)
+        process.terminate()
+        logging.info("Postfix: Waiting for prometheus process to terminate")
         process.join()
+        logging.info("Postfix: prometheus process terminated")
         process = None
