@@ -33,7 +33,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGQUIT, signal_handler)
 
     logging.info("Starting Log Analyzer")
-    start()
 
     os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_MXSERVER_PID")
 
@@ -53,6 +52,11 @@ if __name__ == "__main__":
 
     bind_address = customer_config["mxserver"]["bind"]["inet-interface"]
     port = customer_config["mxserver"]["bind"]["inet-port"]
+
+    prometheus_inet_interface = customer_config["mxserver"]["prometheus"]["inet-interface"]
+    prometheus_inet_port = int(customer_config["mxserver"]["prometheus"]["inet-port"])
+
+    start(prometheus_inet_interface, prometheus_inet_port)
 
     if "abuse" not in customer_config["mxserver"]:
         abuse_config_dict = {}
