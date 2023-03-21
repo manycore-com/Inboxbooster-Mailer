@@ -6,6 +6,7 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.GaugeMetricFamily
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
+import org.pmw.tinylog.Logger
 import java.io.File
 import kotlin.collections.ArrayList
 
@@ -88,6 +89,7 @@ class PrometheusFeeder {
 
         fun start(bindAddress: String, bindPort: Int) {
             DefaultExports.initialize()
+            Logger.info("Starting Prometheus BackData HTTP server on $bindAddress:$bindPort")
             server = HTTPServer(bindAddress, bindPort)
         }
     }

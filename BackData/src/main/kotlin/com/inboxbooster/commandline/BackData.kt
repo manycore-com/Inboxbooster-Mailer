@@ -189,6 +189,21 @@ class BackData {
                 throw IllegalArgumentException("Yaml backdata/redis/port is not interpretable as integer.")
             }
 
+            var prometheusBindAddress = "0.0.0.0"
+            var prometheusPort = 9090
+            if (backDataSection.containsKey("prometheus")) {
+                val prometheusSection = ((backDataSection["prometheus"]) as LinkedHashMap<String,String>)
+                prometheusBindAddress = prometheusSection["inet-interface"]!!
+                pv = prometheusSection["inet-port"]!!
+                prometheusPort = if (pv is Int) {
+                    pv
+                } else if (pv is String) {
+                    pv.toInt()
+                } else {
+                    throw IllegalArgumentException("Yaml backdata/prometheus/inet-interface is not interpretable as integer.")
+                }
+            }
+
             val bounceManager: BounceManager? = if (backDataSection.containsKey("bounce-manager")) {
                 val bounceManagerSection = ((backDataSection["bounce-manager"]) as LinkedHashMap<String,String>)
                 var pv: Any = bounceManagerSection["cid"]!!
@@ -207,7 +222,7 @@ class BackData {
                 null
             }
 
-            PrometheusFeeder.start("0.0.0.0", 9090)
+            PrometheusFeeder.start(prometheusBindAddress, prometheusPort)
 
             val bd = BackData(redisSection["hostname"]!!, port, queueName!!, backDataSection["post-url"]!!, maxAgeToRetry, bounceManager)
             bd.execute()
