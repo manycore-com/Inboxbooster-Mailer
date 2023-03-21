@@ -82,7 +82,7 @@ def metric():
 
 
 # python3 prometheus_datasource.py --global-config-file=../../DoNotCheckIn/configForDev/inboxbooster-mailer-global.yaml --customer-config-file=../../DoNotCheckIn/configForDev/inboxbooster-mailer-customer.yaml
-def get_arg_parse_object(args):
+def get_arg_parse_object():
     parser = argparse.ArgumentParser(description="Redis2")
     parser.add_argument('--global-config-file', type=str, help="Based on inboxbooster-mailer-global.yaml.example", required=True)
     parser.add_argument('--customer-config-file', type=str, help="Based on inboxbooster-mailer-customer.yaml.example", required=True)
@@ -90,7 +90,7 @@ def get_arg_parse_object(args):
 
 
 if __name__ == "__main__":
-    args = get_arg_parse_object(sys.argv[1:])
+    args = get_arg_parse_object()
 
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
     logging.getLogger().setLevel(os.getenv('INBOXBOOSTER_LOG_LEVEL', 'DEBUG'))
@@ -109,14 +109,17 @@ if __name__ == "__main__":
     event_queue_name = global_config["backdata"]["queue-name"]
     queue_to_postfix_name = global_config["postfix"]["incoming-queue-name"]
 
+    prometheus_inet_interface = customer_config["redis"]["prometheus"]["inet-interface"]
+    prometheus_inet_port = int(customer_config["redis"]["prometheus"]["inet-port"])
+
     primary_queue = ReliableQueue(primary_queue_name, rq_redis_host, rq_redis_port)
     default_queue = ReliableQueue(default_queue_name, rq_redis_host, rq_redis_port)
     event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
     queue_to_postfix = ReliableQueue(queue_to_postfix_name, rq_redis_host, rq_redis_port)
 
     app.run(
-        host="0.0.0.0",
-        port=9090,
+        host=prometheus_inet_interface,
+        port=prometheus_inet_port,
         debug=False
     )
 
