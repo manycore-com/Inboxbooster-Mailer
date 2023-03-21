@@ -58,4 +58,4 @@ if __name__ == "__main__":
                 logging.error("Failed uploading dump.rdb: " + str(e))
 
     # the dummy tail -f /dev/null
-    os.system("killall tail")
+    os.system("pkill -f \"tail -F redis_dummy_tail\"")

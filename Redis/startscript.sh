@@ -11,4 +11,5 @@ python3 configuration_check.py  --global-config-file=/configs/inboxbooster-maile
 echo "Starting prometheus endpoint"
 python3 prometheus_datasource.py  --global-config-file=/configs/inboxbooster-mailer-global.yaml --customer-config-file=/configs/inboxbooster-mailer-customer.yaml &
 
-tail -f /dev/null
+echo "" > redis_dummy_tail
+tail -F redis_dummy_tail
