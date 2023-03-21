@@ -2,7 +2,7 @@ from smtplib import SMTP as Client
 
 """
 
-export PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR_RECEIVER
+export PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR
 python \
   main.py \
   --global-config-file=../inboxbooster-mailer-global.yaml.example \

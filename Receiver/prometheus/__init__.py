@@ -46,7 +46,7 @@ registry = CollectorRegistry()
 multiprocess.MultiProcessCollector(registry)
 
 
-def start():
+def start(prometheus_inet_interface, prometheus_inet_port):
     global registry
     registry.register(CustomCollector())
-    start_http_server(9090, registry=registry)
+    start_http_server(port=prometheus_inet_port, addr=prometheus_inet_interface, registry=registry)

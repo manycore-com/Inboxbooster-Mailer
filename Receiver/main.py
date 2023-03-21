@@ -75,6 +75,9 @@ if __name__ == "__main__":
     rq_redis_host = customer_config["receiver"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["receiver"]["reliable-queue"]["redis"]["port"])
 
+    prometheus_inet_interface = customer_config["receiver"]["prometheus"]["inet-interface"]
+    prometheus_inet_port = int(customer_config["receiver"]["prometheus"]["inet-port"])
+
     if "receiver" in customer_config and "auth-logins" in customer_config["receiver"]:
         for login in customer_config["receiver"]["auth-logins"]:
             logging.info("Add AUTH credentials for user " + login["username"])
@@ -91,7 +94,7 @@ if __name__ == "__main__":
     event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
 
     logging.info("Starting Prometheus endpoint")
-    start()
+    start(prometheus_inet_interface, prometheus_inet_port)
 
     logging.info("Starting Receiver on " + bind_address + ":" + str(port) + " with " + str(len(auth_db.keys())) + " logins")
 
