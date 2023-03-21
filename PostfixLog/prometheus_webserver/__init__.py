@@ -62,18 +62,18 @@ def metric():
     return metrics_data()
 
 
-def run(a):
+def run(prometheus_inet_interface, prometheus_inet_port):
     global app
     app.run(
-        host="0.0.0.0",
-        port=9090,
+        host=prometheus_inet_interface,
+        port=prometheus_inet_port,
         debug=False
     )
 
 
-def start_prometheus_endpoint():
+def start_prometheus_endpoint(prometheus_inet_interface, prometheus_inet_port):
     global process
-    process = Process(target=run, args=(1,))
+    process = Process(target=run, args=(prometheus_inet_interface, prometheus_inet_port))
     process.start()
 
 

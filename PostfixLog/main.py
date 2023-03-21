@@ -37,6 +37,9 @@ if __name__ == "__main__":
     postfix_hostname = customer_config["postfixlog"]["postfix"]["hostname"]
     postfix_port = int(customer_config["postfixlog"]["postfix"]["port"])
 
+    prometheus_inet_interface = customer_config["postfixlog"]["prometheus"]["inet-interface"]
+    prometheus_inet_port = int(customer_config["postfixlog"]["prometheus"]["inet-port"])
+
     pl = PostfixLog(event_queue_name, rq_redis_host, rq_redis_port)
 
 
@@ -47,7 +50,9 @@ if __name__ == "__main__":
         rq_redis_host,
         rq_redis_port,
         postfix_hostname,
-        postfix_port
+        postfix_port,
+        prometheus_inet_interface,
+        prometheus_inet_port
     )
 
     time.sleep(1)

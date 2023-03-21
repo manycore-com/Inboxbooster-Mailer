@@ -32,7 +32,9 @@ class PostfixPoller:
                  rq_redis_host: str,
                  rq_redis_port: int,
                  postfix_hostname: str,
-                 postfix_port: int):
+                 postfix_port: int,
+                 prometheus_inet_interface: str,
+                 prometheus_inet_port: int):
         global _singleton
         _singleton = self
         self.log_queue = log_queue
@@ -42,6 +44,8 @@ class PostfixPoller:
         self.rq_redis_port = rq_redis_port
         self.postfix_hostname = postfix_hostname
         self.postfix_port = postfix_port
+        self.prometheus_inet_interface = prometheus_inet_interface
+        self.prometheus_inet_port = prometheus_inet_port
         self.do_run = True
         self.incoming_queue = None
         self.event_queue = None
@@ -69,7 +73,7 @@ class PostfixPoller:
         self.event_queue = ReliableQueue(self.event_queue_name, self.rq_redis_host, self.rq_redis_port)
 
         logging.info("Starting External Prometheus Endpoint")
-        start_prometheus_endpoint()
+        start_prometheus_endpoint(self.prometheus_inet_interface, self.prometheus_inet_port)
 
         logging.info("Starting Internal Prometheus Poller endpoint")
         start()
