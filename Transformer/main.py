@@ -32,7 +32,6 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     logging.info("Starting Transformer...")
-    start()
 
     os.system("echo " + str(os.getpid()) + " > /tmp/INBOXBOOSTER_TRANSFORMER_PID")
 
@@ -68,6 +67,10 @@ if __name__ == "__main__":
 
     rq_redis_host = customer_config["transformer"]["reliable-queue"]["redis"]["hostname"]
     rq_redis_port = int(customer_config["transformer"]["reliable-queue"]["redis"]["port"])
+
+    prometheus_inet_interface = customer_config["transformer"]["prometheus"]["inet-interface"]
+    prometheus_inet_port = int(customer_config["transformer"]["prometheus"]["inet-port"])
+    start(prometheus_inet_interface, prometheus_inet_port)
 
     domain_configuration = {}
     for domain_data in customer_config["transformer"]["domain-settings"]:
