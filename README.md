@@ -54,7 +54,11 @@ Go to ~/example.com and create the DKIM keys.
 ```shell
 mkdir -p ~/example.com/dkim
 cd ~/example.com/dkim
-openssl genrsa -out dkim-example.com.pem 1024
+if [[ `openssl version | cut -d ' ' -f 2` = 3* ]]; then
+  openssl genrsa --traditional -out dkim-example.com.pem 1024
+else
+  openssl genrsa -out dkim-example.com.pem 1024
+fi
 openssl rsa -in dkim-example.com.pem -out dkim-example.com.pub -pubout
 ```
 

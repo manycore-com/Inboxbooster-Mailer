@@ -49,30 +49,12 @@ Create a directory with all your configurations. Let's call it ~/example.com in 
 
 
 # DKIM
-In recent years, reputation has been moved from the IP address of the mail server to the domain.
-That's the very reason this product exist.
-
-You sign your emails with an encryption hash, and you provide a mail header with the hash and
-a TXT entry in your DNS so receiving end can verify that the email is from you.
-
-Please use openssl 1.1.1 (for example the one installed in the conda environment).
-
-Go to ~/example.com and create the DKIM keys.
-```shell
-mkdir -p ~/example.com/dkim
-cd ~/example.com/dkim
-openssl genrsa -out dkim-example.com.pem 1024
-openssl rsa -in dkim-example.com.pem -out dkim-example.com.pub -pubout
-```
-
-Note: pem file should start with "-----BEGIN RSA PRIVATE KEY-----".
-```shell
-11:34:33 of 🐴 :dkim ehsmeng> head -n 1 example.com.pem 
------BEGIN RSA PRIVATE KEY-----
-```
-If "RSA" is not present, it will not work.
+Let's configure 
+[dkim](https://github.com/manycore-com/Inboxbooster-Mailer#dkim)
+next.
 
 We'll add all DNS entries later, including the DKIM public key.
+
 
 # main.cf
 We're using Postfix as an open relay internally in the mailer.
