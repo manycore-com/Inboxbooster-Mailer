@@ -65,7 +65,10 @@ class PostfixLog:
                         if cache.response_code is None:
                             if "Connection timed out" in cache.status_message:
                                 bounceType = "unroutable"  # was: soft
-                                logging.info("deferred with Connection timed out. Setting to soft bounce")
+                                logging.info("deferred with Connection timed out. Setting to unroutable")
+                            elif " does not accept mail (nullMX)" in cache.status_message:
+                                bounceType = "unroutable"  # was: soft
+                                logging.info("Target domain unresolved. Setting to unroutable")
                             else:
                                 bounceType = None
                         elif cache.response_code >= 500 and cache.response_code < 599:
