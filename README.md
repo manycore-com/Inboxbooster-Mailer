@@ -1,7 +1,12 @@
 # Manycore-Mail
 Cloud native Open Source MTA.
 
-[An installation walkthrough for the GKE environment if you want to test quickly](README-GKE-EXAMPLE.md)
+Examples:
+* [A single docker container for the mailer](README-SINGLE-DOCKER.md)
+* [An installation walkthrough for the GKE environment](README-GKE-EXAMPLE.md)
+
+
+
 
 # Configuration
 The configuration assumes a config-map called **inboxbooster-config** exists.
@@ -91,6 +96,7 @@ Note: you need to listen to [incoming events](README-EVENTS.md) and act accordin
 The unsubscribe and spam-report events are an absolute necessity to honor.
 It's a legal requirement, and deliverability will also suffer greatly 
 if you ignore them.
+
 
 # Modules
 1. [Redis](Redis) 
@@ -301,31 +307,61 @@ To use HttpReceiver, you need to configure a reverse proxy in front of it and pu
 ssl certificate there.
 
 # Domain Settings
-You need to add the dkim *public* key. The selector name is configurable, but here we call it "mailer".
-```shell
-mailer._domainkey 3600 IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCx1VRynuum5cOkpBxIChqRTua0SPjnX119JTeUS2pfhz78LESOKri/GPhYgQ7ts4I2JBbRlrHwAPd+3SGwd88+4KLKky/uZKXQeVPKkoBoKvBSDrmDNdnUEeIQVy9qFEMopkWygk69Nu5DeoAINwr2Mf60vWivvPiwYhHnM/9EPQIDAQAB"
-```
-You need to add an MX record back to the MxServer for every return path domain you specified in
-[inboxbooster-mailer-customer.yaml/transformer/domain/settings](inboxbooster-mailer-customer.yaml.example).
+
+Please update your [DNS](https://github.com/manycore-com/Inboxbooster-Mailer#domain-settings) accordingly.
+
+You want to set receiver.example.com (replace example.com to domain
+of your choice) to the IP address where module Receiver listens.
+The dns entry doesn't have to be in any way
+connected to the domain you'll send from. Example:
 
 ```shell
-@ 3600 IN MX 1 mxserver.example.com.
+receiver 3600 IN A 34.1.2.4
 ```
-The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/myhostname](inboxbooster-mailer-customer.yaml.example)
-OR content in file configs/myhostname name is used in HELO and needs
-to be resolvable.
 
-Set it to the mxserver's address. Example below assumes you have 
-called myhostname mxserver.example.com.
+You want to set mxserver.example.com (replace example.com to domain
+of your choice) the IP address where module MxServer listens on port 25.
+The dns entry doesn't have to be in any way
+connected to the domain you'll send from. Example:
 
 ```shell
 mxserver 3600 IN A 34.1.2.3
 ```
 
-You need to set the address for Receiver and HttpReceiver, depending on your needs.
+Note: do not under any circumstances make the postfix pod's port 25 public.
+
+You need to add a dkim *public* key per domain that is going to be used
+to send from.
+The selector name is configurable, in the examples it's called "mailer".
+
 ```shell
-receiver 3600 IN A 34.1.2.4
+mailer._domainkey 3600 IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCx1VRynuum5cOkpBxIChqRTua0SPjnX119JTeUS2pfhz78LESOKri/GPhYgQ7ts4I2JBbRlrHwAPd+3SGwd88+4KLKky/uZKXQeVPKkoBoKvBSDrmDNdnUEeIQVy9qFEMopkWygk69Nu5DeoAINwr2Mf60vWivvPiwYhHnM/9EPQIDAQAB"
 ```
+
+You need to add an MX record back to the MxServer for every return path domain you specified in
+[inboxbooster-mailer-customer.yaml/transformer/domain/settings](inboxbooster-mailer-customer.yaml.example).
+
+Here we chose return path domain as example.com.
+```shell
+@ 3600 IN MX 1 mxserver.example.com.
+```
+Note: With this approach Inboxbooster Mailer cannot co-exist with having
+another ISP (e.g gmail) for the domain as example.com's MX records would
+conflict. If the mailer is configured on its own domain you can use this
+domain for all return paths, or you can use a subdomain with a MX record.
+Example:
+```shell
+mailer 3600 IN MX 1 mxserver.example.com.
+```
+
+
+The [inboxbooster-mailer-customer.yaml:postfixlog/main-cf/myhostname](inboxbooster-mailer-customer.yaml.example) 
+is used in HELO and needs to be resolvable.
+
+Set it to the mxserver's address. Example below assumes you have 
+called myhostname mxserver.example.com.
+
+
 
 # Testing
 ## MxServer
