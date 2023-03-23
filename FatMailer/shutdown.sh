@@ -20,3 +20,4 @@ cd /app/Redis
 python3 shutdown.py --global-config-file=/configs/inboxbooster-mailer-global.yaml --customer-config-file=/configs/inboxbooster-mailer-customer.yaml
 
 pkill -f "tail -F mainscript_dummy"
+
