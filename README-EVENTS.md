@@ -14,7 +14,7 @@ Example:
 [
   {
     "event": "unsubscribe",
-    "uuid": "92837V498A2374",
+    "uuid": "92837v498a2374",
     "timestamp": 1668716022
   }
 ]
@@ -25,7 +25,7 @@ Example:
 | Name      | Value          | Description                                                          |
 |-----------|----------------|----------------------------------------------------------------------|
 | event     | delivered      | always set to delivered                                              |
-| uuid      | 92837V498A2374 | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+ |
+| uuid      | 92837v498a2374 | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+ |
 | timestamp | 1668716022     | unix timestamp in seconds                                            |
 | ip        | 1.2.3.4        | Optional ip address of server receiving the mail                     |
 
@@ -33,7 +33,7 @@ Example:
 | Name      | Value                  | Description                                                                         |
 |-----------|------------------------|-------------------------------------------------------------------------------------|
 | event     | bounce                 | always set to bounce                                                                |
-| uuid      | 92837V498A2374         | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+                |
+| uuid      | 92837v498a2374         | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+                |
 | timestamp | 1668716022             | unix timestamp in seconds                                                           |
 | ip        | 1.2.3.4                | ip address of server refusing receiving the mail. May be empty (e.g illegal domain) |
 | reason    | 550 5.1.1 User unknown | reason for bounce. May be empty.                                                    |
@@ -49,14 +49,14 @@ This does not include errors parsed from Postfix (e.g Bounce).
 | msg         | X-Uuid missing | Error message                      |
 | service     | backdata       | Service that encountered the error |
 | stack-trace | stack trace    | Optional stack trace to help debug |
-| uuid        | 92837V498A2374 | Optional, may not be available     |
+| uuid        | 92837v498a2374 | Optional, may not be available     |
 | timestamp   | 1668716022     | unix timestamp in seconds          |
 
 ### Spam-Report
 | Name      | Value           | Description                                                          |
 |-----------|-----------------|----------------------------------------------------------------------|
 | event     | spam-report     | always set to spam-report                                            |
-| uuid      | 92837V498A2374  | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+ |
+| uuid      | 92837v498a2374  | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+ |
 | email     | apa@example.com | email address of spam reporter                                       |
 | timestamp | 1668716022      | unix timestamp in seconds                                            |
 
@@ -64,5 +64,5 @@ This does not include errors parsed from Postfix (e.g Bounce).
 | Name      | Value           | Description                                                          |
 |-----------|-----------------|----------------------------------------------------------------------|
 | event     | unsubscribe     | always set to unsubscribe                                            |
-| uuid      | 92837V498A2374  | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+ |
+| uuid      | 92837v498a2374  | from the X-Uuid header in the original mail. Matches regex [a-z0-9]+ |
 | timestamp | 1668716022      | unix timestamp in seconds                                            |

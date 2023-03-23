@@ -11,8 +11,8 @@ It's used in the [events](README-EVENTS.md) to communicate status.
 |----------------|-----------------|------------------------------------------------------------------------------------------------------------------|
 | X-Priority     | 0               | 0 or 1. 0 is high priority.                                                                                      |
 | X-Report-Abuse |                 | You need to set the X-Report-Abuse header.                                                                       |
-| X-Uuid         | 0123456789ABC   | An id uniquely identifying the email sent to one recipient. Lower case (headers are case insensitive). [a-z0-9]+ |
-| X-Stream-Id    | 0123-456789-ABC | Optional: Template Id and Campaign Id concatenated, to help identify deliverability.                             |
+| X-Uuid         | 0123456789abc   | An id uniquely identifying the email sent to one recipient. Lower case (headers are case insensitive). [a-z0-9]+ |
+| X-Stream-Id    | 0123-456789-abc | Optional: Template Id and Campaign Id concatenated, to help identify deliverability.                             |
 
 ## Headers set by the mailer
 | Name        | Value               | Description                                                                                                                       |

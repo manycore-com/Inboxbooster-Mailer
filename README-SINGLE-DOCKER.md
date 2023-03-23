@@ -84,7 +84,7 @@ The Mailer, properly installed, needs
 * dkim-example.com.pem
 * dkim-example.com.pub
 * optional receiver_cert.pem and receiver_key.pem for SMTP TLS. If not provided,
-  the mailer will create self signed certificates on startup.
+  the mailer will create self-signed certificates on startup.
 
 ### [inboxbooster-mailer-global.yaml](FatMailer/configexample/inboxbooster-mailer-global.yaml.example)
 This file is for static settings that you normally should not have to touch.
@@ -96,8 +96,8 @@ This file is for your customer specific settings, and you really have to edit it
 Content of dkim-example.com.pub is put in the DNS, and dkim-example.com.pem
 is used by the Transformer module to sign the mails.
 
-You must under no circumstances use these files in production! Please
-regenerate them for each of your domains.
+You must under no circumstance use these provided files in production!
+Please regenerate them for each of your domains.
 
 ## Mail Headers
 The Mailer needs some [custom headers](README-HEADERS.md) in the mails 
