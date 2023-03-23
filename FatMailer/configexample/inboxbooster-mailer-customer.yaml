@@ -1,0 +1,131 @@
+httpreceiver:
+  bind:
+    inet-interface: 0.0.0.0
+    inet-port: 8080
+    inet-port-metrics: 9090
+  auth-logins:
+    - username: someuser
+      password: aDecentlyStrongPassword
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9090
+receiver:
+  bind:
+    inet-interface: 0.0.0.0
+    inet-port: 587
+  auth-logins:
+    # You can add multiple logins here.
+    - username: someuser
+      password: aDecentlyStrongPassword
+  ignore-smtp-mail-from-rcpt-to:
+    true
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9091
+transformer:
+  email-headers:
+    inject:
+      List-Unsubscribe: "<mailto:unsub-{{uuid}}@{{from-domain}}>"
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  # Feel free to add multiple dkim configurations.
+  domain-settings:
+   - domain: example.com
+     dkim-private-key-file: /configs/dkim-example.com.pem
+     return-path-domain: example.com
+     selector: mailer
+     #beacon-url: "http://localhost:8090/abc/{{ stream-id }}.gif"
+  # This will change in next version, but for now:
+  # feedback-id will be campaign:customer:mailtype:{uuid}
+  # https://support.google.com/mail/answer/6254652?hl=en
+  feedback-id:
+    campaign-id: test-campaign
+    mail-type: test-mailtype
+    # Third value is uuid
+    sender-id: example-sender
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9092
+postfixlog:
+  logfile: /var/log/mail.log
+  #logfile: test/test2.log
+  locationfile: /tmp/postfixlog-location
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  postfix:
+    # run test_dummy_postfix.sh to have a dummy responder for test.
+    hostname: 0.0.0.0
+    port: 26
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9093
+  string-replacer:
+    main-cf:
+      # is used in HELO and needs to be resolvable with some ISP, else it will bounce.
+      # It doesn't have to be the same as the domain you send from.
+      # If you have a /configs/myhostname file, its content will be used if this entry is not set.
+      myhostname: mxserver.example.com
+      # main.cf's mailname needs to have an MX entry in your dns, preferably to where mxserver listens.
+      mailname: example.com
+    # If no entry, default port 25 will be used.
+    master-cf:
+      smtpd-port: 26
+mxserver:
+  bind:
+    inet-interface: 0.0.0.0
+    inet-port: 25
+  eml-directory:
+    tmp
+  abuse:
+    # You need to register an email address at Yahoo to receive abuse reports. 
+    # the MX of the domain needs to point to the MxServer.
+    yahoo:
+      to: fbl@example.com
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9094
+backdata:
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  # this is where all events will be posted to.
+  post-url: "http://events.example.com"
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9095
+redis:
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9096
+#common-config:
+  # If you want the Redis pod to store its state on restart, please configure
+  # the object storage below.
+  #object-storage:
+  #  type: s3
+  #  bucket: testbucket
+  #  region: us-east-1
+  #  access-key-id: testkey
+  #  secret-access-key: testsecret
+  #  endpoint-url: https://s3.us-east-1.amazonaws.com
+

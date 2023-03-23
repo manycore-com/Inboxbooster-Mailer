@@ -1,0 +1,13 @@
+reliable-queue:
+  queue-names:
+    primary-queue: IB-MAIL-QUEUE-P0
+    default-queue: IB-MAIL-QUEUE-P1
+backdata:
+  queue-name:
+    EVENT_QUEUE
+transformer:
+  x-mailer:
+    Inboxbooster-Mailer
+postfix:
+  incoming-queue-name:
+    INCOMING-TO-POSTFIX
