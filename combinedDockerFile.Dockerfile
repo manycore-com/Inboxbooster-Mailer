@@ -2,8 +2,8 @@ FROM ubuntu:22.04
 
 WORKDIR /app
 
-# docker build -f fatMailer.Dockerfile -t inboxbooster/fatmailer:latest .
-# docker push inboxbooster/fatmailer
+# docker build -f combinedDockerFile.Dockerfile -t inboxbooster/combineddockerfile:latest .
+# docker push inboxbooster/combineddockerfile
 
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp/PROMETHEUS_MULTIPROC_DIR
 ENV PYTHONUNBUFFERED=1
@@ -146,10 +146,10 @@ COPY Redis/shutdown.py /app/Redis/shutdown.py
 
 
 
-COPY FatMailer/startscript.sh .
+COPY CombinedDockerFile/startscript.sh .
 RUN chmod 755 /app/startscript.sh
 
-COPY FatMailer/shutdown.sh .
+COPY CombinedDockerFile/shutdown.sh .
 RUN chmod 755 /app/shutdown.sh
 
 

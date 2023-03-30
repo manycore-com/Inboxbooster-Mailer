@@ -31,7 +31,7 @@ Unzip test files and run the Mailer:
 
 ```shell
 unzip ~/Downloads/configexample.zip
-docker run -p 9210:587 -v `pwd`/configexample:/configs  inboxbooster/fatmailer:latest
+docker run -p 9210:587 -v `pwd`/configexample:/configs  inboxbooster/combineddockerfile:latest
 ```
 
 The example domain is illegal, and the recipient is illegal, but as an
@@ -65,7 +65,7 @@ listener host events.example.com does not exist. This means
 
 Log in to the pod and shut it down:
 ```shell
-docker exec -it `docker ps|grep "inboxbooster/fatmailer:"|cut -d ' ' -f 1` /bin/bash
+docker exec -it `docker ps|grep "inboxbooster/dombineddockerfile:"|cut -d ' ' -f 1` /bin/bash
 # inside the container
 ./shutdown.sh
 ```
@@ -79,20 +79,20 @@ The Mailer, properly installed, needs
 
 ## Configuration files
 
-* [inboxbooster-mailer-global.yaml](FatMailer/configexample/inboxbooster-mailer-global.yaml.example)
-* [inboxbooster-mailer-customer.yaml](FatMailer/configexample/inboxbooster-mailer-customer.yaml)
+* [inboxbooster-mailer-global.yaml](CombinedDockerFile/configexample/inboxbooster-mailer-global.yaml.example)
+* [inboxbooster-mailer-customer.yaml](CombinedDockerFile/configexample/inboxbooster-mailer-customer.yaml)
 * dkim-example.com.pem
 * dkim-example.com.pub
 * optional receiver_cert.pem and receiver_key.pem for SMTP TLS. If not provided,
   the mailer will create self-signed certificates on startup.
 
-### [inboxbooster-mailer-global.yaml](FatMailer/configexample/inboxbooster-mailer-global.yaml.example)
+### [inboxbooster-mailer-global.yaml](CombinedDockerFile/configexample/inboxbooster-mailer-global.yaml.example)
 This file is for static settings that you normally should not have to touch.
 
-### [inboxbooster-mailer-customer.yaml](FatMailer/configexample/inboxbooster-mailer-customer.yaml)
+### [inboxbooster-mailer-customer.yaml](CombinedDockerFile/configexample/inboxbooster-mailer-customer.yaml)
 This file is for your customer specific settings, and you really have to edit it.
 
-### [dkim](https://github.com/manycore-com/Inboxbooster-Mailer#dkim)
+### [dkim](https://github.com/manycore-com/Inboxbooster-Mailer/blob/main/README-CONFIGURATION.md#dkim)
 Content of dkim-example.com.pub is put in the DNS, and dkim-example.com.pem
 is used by the Transformer module to sign the mails.
 
@@ -108,4 +108,4 @@ The Mailer needs a server listening to [events](README-EVENTS.md) it
 produces.
 
 ## DNS
-The Mailer needs proper [DNS entries](https://github.com/manycore-com/Inboxbooster-Mailer#domain-settings) to work.
+The Mailer needs proper [DNS entries](https://github.com/manycore-com/Inboxbooster-Mailer/blob/main/README-CONFIGURATION.md#domain-settings) to work.
