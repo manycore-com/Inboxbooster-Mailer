@@ -4,9 +4,11 @@ and the bare minimum configuration needed.
 
 The configuration below is for domain example.com, and the mailer 
 is configured to exist on this domain too.
+It's enough to start the Mailer, but it will not be able to send anything.
+You also need to listen to unsubscribe and spam events for a proper installation.
 
 It's possible to have mailer separated from all domains that are
-going to be sent from, and each domain to send from needs
+going to be sent from. However, each domain to send from needs
 its own dkim configuration setup.
 
 The Mailer will be started by a simple docker run command, and the 
@@ -20,12 +22,13 @@ To check if it's allowed, try:
 telnet aspmx.l.google.com 25
 ```
 Many ISP prevents incoming connections to port 25. If so, the MxServer module
-will be invisible and Unsubscribe, Spam reports, and asyncronous bounce events
-will not work. Unsubscribe and spam report are legal requirements to respect,
+will be invisible and Unsubscribe, Spam reports, and asynchronous bounce events
+will not work (even if configured properly in Mailer).
+Unsubscribe and spam report are legal requirements,
 and will affect deliverability if not implemented.
 
 # Quick run
-We've provided some downloadable [example files](configexample.zip).
+We've provided some downloadable [example files](configexample.zip) as a starting point.
 
 Unzip test files and run the Mailer:
 
@@ -57,10 +60,10 @@ an example.
 The python message above will generate an error informing that the events
 listener host events.example.com does not exist. This means
 1. the message was accepted by the mailer
-2. the messages was successfully signed.
+2. the message was successfully signed.
 3. the message was handed over to Postfix, but postfix failed to lookup
-   the recipient domain example.com.
-4. the Mailer tried to post a bounce event to tell about the fiasco.
+   the recipient domain example.dev.
+4. the Mailer then tried to post a bounce event to tell about the fiasco.
    As we have no proper event listener configured, we got an error.
 
 Log in to the pod and shut it down:
@@ -72,10 +75,10 @@ docker exec -it `docker ps|grep "inboxbooster/dombineddockerfile:"|cut -d ' ' -f
 
 # Installation
 The Mailer, properly installed, needs
-* configuration files
+* proper configuration files
 * custom headers in the mails sent.
 * an event receiving server acting on unsubscribe, and spam reports.
-* DNS entries
+* DNS keys (dkim, mx for return path domain, optional entries for Receiver (smtp) and HttpReceiver)
 
 ## Configuration files
 

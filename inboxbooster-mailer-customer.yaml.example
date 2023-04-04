@@ -1,8 +1,8 @@
 receiver:
   # Note:
-  # receiver assumes /configs/receiver_cert.pem and
-  # /configs/receiver_key.pem exists.
-  # See Receiver/certs/README.md for more info.
+  # receiver assumes /configs/receiver_cert.pem and /configs/receiver_key.pem exists.
+  # If not, self-signed certs are created on startup.
+  # See README-CONFIGURATION.md#receiver_certpem-and-receiver_keypem for more info.
   bind:
     inet-interface: localhost
     inet-port: 8025
