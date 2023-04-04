@@ -8,9 +8,9 @@ class LRUCache:
         self.cache = OrderedDict()
         self.capacity = capacity
 
-    def get(self, key: str):
+    def get(self, key: str, default=None):
         if key not in self.cache:
-            return None
+            return default
         else:
             self.cache.move_to_end(key)
             return self.cache[key]

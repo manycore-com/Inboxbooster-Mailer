@@ -60,7 +60,8 @@ class PostfixPoller:
                 "stack-trace": stacktrace,
                 "service": "postfix",
                 "timestamp": int(time.time()),
-                "uuid": uuid
+                "uuid": uuid,
+                "streamid": streamid
             }
             self.event_queue.push(json.dumps(event).encode("utf-8"))
             logging.info("Error function called. msg=" + str(msg))
@@ -121,11 +122,17 @@ class PostfixPoller:
                         if "X-RecipientIb" in parsed_email:
                             rcpt_to = parsed_email["X-RecipientIb"]
                             del parsed_email["X-RecipientIb"]
+                            self.log_queue.put("POLLER-FROM+TO-STREAMID-MAP: " +
+                                               return_path + '+' + rcpt_to + ' ' +
+                                               (streamid if streamid is not None else ''))
                             client.sendmail(return_path, [rcpt_to], message_as_bytes)
                         else:
                             for addr_tuple in getaddresses(
                                     parsed_email.get_all('To', []) + parsed_email.get_all('Cc', [])):
                                 rcpt_to = addr_tuple[1]
+                                self.log_queue.put("POLLER-FROM+TO-STREAMID-MAP: " +
+                                                   return_path + '+' + rcpt_to + ' ' +
+                                                   (streamid if streamid is not None else ''))
                                 client.sendmail(return_path, [rcpt_to], message_as_bytes)
                         with postfix_emails_to_postfix_total.get_lock():
                             postfix_emails_to_postfix_total.value += 1
