@@ -60,9 +60,10 @@ class PostfixPoller:
                 "stack-trace": stacktrace,
                 "service": "postfix",
                 "timestamp": int(time.time()),
-                "uuid": uuid,
-                "streamid": streamid
+                "uuid": uuid
             }
+            if streamid is not None:
+                event["streamid"] = streamid
             self.event_queue.push(json.dumps(event).encode("utf-8"))
             logging.info("Error function called. msg=" + str(msg))
         except Exception as e:

@@ -75,9 +75,10 @@ class PostfixLog:
                             "timestamp": int(time.time()),
                             "ip": cache.ip,
                             "rcpt": list(cache.to),
-                            "fd": fd,
-                            "streamid": streamid
+                            "fd": fd
                         }
+                        if streamid is not None:
+                            event["streamid"] = streamid
                         self.reliable_queue.push(json.dumps(event).encode("utf-8"))
                         logging.info(str(event))
                     elif cache.status in ["deferred", "bounced", "expired"]:
@@ -86,8 +87,11 @@ class PostfixLog:
                                 bounceType = "unroutable"  # was: soft
                                 logging.info("deferred with Connection timed out. Setting to unroutable")
                             elif " does not accept mail (nullMX)" in cache.status_message:
-                                bounceType = "unroutable"  # was: soft
+                                bounceType = "unroutable"
                                 logging.info("Target domain unresolved. Setting to unroutable")
+                            elif "Host or domain name not found. Name service error for name" in cache.status_message:
+                                bounceType = "unroutable"
+                                logging.info("Target domain unresolved (2). Setting to unroutable")
                             else:
                                 bounceType = None
                         elif cache.response_code >= 500 and cache.response_code < 599:
@@ -107,9 +111,10 @@ class PostfixLog:
                             "type": str(bounceType),
                             "reason": cache.status_message,
                             "rcpt": list(cache.to),
-                            "fd": fd,
-                            "streamid": streamid
+                            "fd": fd
                         }
+                        if streamid is not None:
+                            event["streamid"] = streamid
 
                         if bounceType is None:
                             logging.warning("Can not deduce bounce type: " + str(json.dumps(event)))
