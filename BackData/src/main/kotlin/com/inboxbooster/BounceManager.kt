@@ -77,6 +77,12 @@ class BounceManager {
             newObj.put("timestamp", jo.get("timestamp"))
             newObj.put("event", jo.get("event"))
 
+            if (jo.has("streamid")) {
+                if (null != jo.get("streamid")) {
+                    newObj.put("streamid", jo.get("streamid"))
+                }
+            }
+
             if (jo.has("type")) {
                 newObj.put("type", jo.get("type"))
             }

@@ -61,7 +61,19 @@ class BackDataTest {
         val response: Response = okHttpClient.newCall(request).execute()
         println(response.code)
         println(response)
+    }
 
+    @Test
+    fun `just run it do not create any event`() {
+        Logger.getConfiguration().level(Level.DEBUG).activate()
+        val rq = ReliableQueue("localhost", 6379, "EVENT_QUEUE", 50)
+
+        val args = listOf<String>(
+            "--global-config-file", "../inboxbooster-mailer-global.yaml.example",
+            "--customer-config-file", "../inboxbooster-mailer-customer.yaml.example",
+        )
+
+        BackData.main(args.toTypedArray())
     }
 
 }

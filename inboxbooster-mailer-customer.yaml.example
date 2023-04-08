@@ -113,6 +113,7 @@ backdata:
   # might get blocked.
   post-url: "http://localhost:8090"
   # This is an endpoint for bounce and delivered data for deliverability measures.
+  # cid, secret, and url are provided by Inboxbooster.
   #bounce-manager:
   #  secret: apa
   #  cid: 1
