@@ -2,6 +2,8 @@
 Cloud native Open Source MTA. 
 A typical Intel 4 core Xeon Haswell server has a throughput of > 10 emails per second.
 
+[Changelog](CHANGELOG.md)
+
 ## Use cases
 ### Transactional emails
 The Mailer can easily be setup to send transactional emails.
@@ -28,5 +30,4 @@ Examples:
 * [An installation walkthrough for the GKE environment](README-GKE-EXAMPLE.md)
 
 [full documentation](README-CONFIGURATION.md)
-
 
