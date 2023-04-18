@@ -63,7 +63,7 @@ class PostfixLog:
                         streamid = None
                     else:
                         streamidkey = cache.return_path.lower() + "+" + list(cache.to)[0].lower()
-                        streamid = self.lruStreamIdMap.get(PostfixLog.sha224(streamidkey), "barkbåt")
+                        streamid = self.lruStreamIdMap.get(PostfixLog.sha224(streamidkey), None)
 
                     # Send event
                     if cache.status == "sent":
