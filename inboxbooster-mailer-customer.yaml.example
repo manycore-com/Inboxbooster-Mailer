@@ -1,3 +1,19 @@
+# HttpReceiver requires you to add encryption in a reverse proxy in k8s.
+httpreceiver:
+  bind:
+    inet-interface: 0.0.0.0
+    inet-port: 8080
+    inet-port-metrics: 9090
+  auth-logins:
+    - username: someuser
+      password: aDecentlyStrongPassword
+  reliable-queue:
+    redis:
+      hostname: localhost
+      port: 6379
+  prometheus:
+    inet-interface: 0.0.0.0
+    inet-port: 9090
 receiver:
   # Note:
   # receiver assumes /configs/receiver_cert.pem and /configs/receiver_key.pem exists.
@@ -34,6 +50,7 @@ transformer:
   # leading to the mxserver.
   # Note: if you want to use example.com with personal gmail accounts, and use Inboxbooster-Mailer for the rest,
   # make sure you set a return-path-domain that will not collide with MX records for gmail/outlook/etc.
+  # How to create dkim keys: https://github.com/manycore-com/Inboxbooster-Mailer/blob/main/README-CONFIGURATION.md#dkim
   domain-settings:
    - domain: example.com
      dkim-private-key-file: ../../../cert/dkim-test-private.key
@@ -57,9 +74,6 @@ transformer:
     inet-interface: 0.0.0.0
     inet-port: 9092
 postfixlog:
-  # Note: The config map also needs files for Postfix
-  #  /configs/myhostname content sets value of myhostname in main.cf
-  #  /configs/mailname
   logfile: /var/log/mail.log
   reliable-queue:
     redis:
@@ -75,8 +89,9 @@ postfixlog:
   string-replacer:
     main-cf:
       # is used in HELO and needs to be resolvable with some ISP, else it will bounce.
-      # It doesn't have to be the same as the domain you send from. Point it to the same
-      # place as mxserver.
+      # It doesn't have to be the same as the domain you send from. Add a DNS entry (A or CNAME) to where
+      # receiving side (e.g gmail) can verify it exists.
+      #
       # If you have a /configs/myhostname file, its content will be used if this entry is not set.
       myhostname: mxserver.example.com
       # main.cf's mailname needs to have an MX entry in your dns, preferably to where mxserver listens.
