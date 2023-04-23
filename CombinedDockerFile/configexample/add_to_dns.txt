@@ -1,0 +1,28 @@
+# a summary of what to add to the dns
+
+# MxServer deals with unsubscribe, async bounces, etc.
+# Note! This is an Inboxbooster daemon, not the Postfix module.
+# The Postfix module is configured as an open relay for internal use for
+# the Inboxbooster-Mailer and must under no circumstances be public.
+mxserver 3600 IN A 1.2.3.4
+
+# Where you'll connect using SMTP to send emails.
+# The Receiver module listens on port 587 by default.
+receiver 3600 IN A 1.2.3.4
+
+# transformer/domain-settings/return-path-domain.
+# example: return path is x@returns.example.com. 
+# example.com then must have a MX record that points to the server where the
+# MxServer module runs.
+# 
+# Note: Note, the return path does not have to have anything to do with
+# the domain you're sending from. If you intend to receive emails on the
+# domain you would need to separate them. For example by calling the 
+# return path returns.example.com and send emails from @example.com. 
+returns 3600 IN MX 1 mxserver.example.com.
+
+# The Transformer module adds a cryptographic hash as a header in your mail,
+# using the dkim private key, and receiving side can verify the hash using
+# the public key.
+mailer._domainkey 3600 IN TXT "v=DKIM1; k=rsa; p=ThePublicDkimKey"
+

@@ -1,3 +1,5 @@
+# HttpReceiver is currently not used in the Single Docker setup.
+# HttpReceiver requires you to add encryption in a reverse proxy in k8s.
 httpreceiver:
   bind:
     inet-interface: 0.0.0.0
@@ -39,11 +41,17 @@ transformer:
       hostname: localhost
       port: 6379
   # Feel free to add multiple dkim configurations.
+  # Return path domain can be the same for all sender domains. It just needs to have an DNS MX entry
+  # leading to the mxserver.
+  # Note: if you want to use example.com with personal gmail accounts, and use Inboxbooster-Mailer for the rest,
+  # make sure you set a return-path-domain that will not collide with MX records for gmail/outlook/etc.
+  # How to create dkim keys: https://github.com/manycore-com/Inboxbooster-Mailer/blob/main/README-CONFIGURATION.md#dkim
   domain-settings:
    - domain: example.com
      dkim-private-key-file: /configs/dkim-example.com.pem
-     return-path-domain: example.com
+     return-path-domain: returns.example.com
      selector: mailer
+     # beacon-url is totally optional.
      #beacon-url: "http://localhost:8090/abc/{{ stream-id }}.gif"
   # This will change in next version, but for now:
   # feedback-id will be campaign:customer:mailtype:{uuid}
@@ -58,8 +66,6 @@ transformer:
     inet-port: 9092
 postfixlog:
   logfile: /var/log/mail.log
-  #logfile: test/test2.log
-  locationfile: /tmp/postfixlog-location
   reliable-queue:
     redis:
       hostname: localhost
@@ -74,13 +80,19 @@ postfixlog:
   string-replacer:
     main-cf:
       # is used in HELO and needs to be resolvable with some ISP, else it will bounce.
-      # It doesn't have to be the same as the domain you send from.
+      # It doesn't have to be the same as the domain you send from. Add a DNS entry (A or CNAME) to where
+      # receiving side (e.g gmail) can verify it exists.
+      #
       # If you have a /configs/myhostname file, its content will be used if this entry is not set.
       myhostname: mxserver.example.com
       # main.cf's mailname needs to have an MX entry in your dns, preferably to where mxserver listens.
+      # We construct messageid and return-path from the transformer/domain-settings/return-path-domain
+      # so this value is not as important as in a normal Postfix installation.
       mailname: example.com
     # If no entry, default port 25 will be used.
     master-cf:
+      # We're putting it on port 26, so we can use port 25 for the mxserver.
+      # Both are running in the same pod in this setup.
       smtpd-port: 26
 mxserver:
   bind:
@@ -105,12 +117,21 @@ backdata:
     redis:
       hostname: localhost
       port: 6379
-  # this is where all events will be posted to.
+  # If configured, you'll receive events (delivered, bounce, error, spam-report, unsubscribe).
+  # For legal reasons, you need to listen to unsubscribe events and spam-reports, else you
+  # might get blocked.
   post-url: "http://events.example.com"
+  # This is an endpoint for bounce and delivered data for deliverability measures.
+  # cid, secret, and url are provided by Inboxbooster.
+  #bounce-manager:
+  #  secret: apa
+  #  cid: 1
+  #  url: "http://localhost:8091"
   prometheus:
     inet-interface: 0.0.0.0
     inet-port: 9095
 redis:
+  # Only used by the Prometheus datasource to ask Redis for queue sizes.
   reliable-queue:
     redis:
       hostname: localhost
@@ -119,8 +140,10 @@ redis:
     inet-interface: 0.0.0.0
     inet-port: 9096
 #common-config:
-  # If you want the Redis pod to store its state on restart, please configure
-  # the object storage below.
+  # If configured, Redis saves it state here if restarted.
+  # If Postfix is restarted, it pushes its current queue to Redis.
+  # It's a good idea to configure this.
+  # Currently only the s3 protocol is supported.
   #object-storage:
   #  type: s3
   #  bucket: testbucket
