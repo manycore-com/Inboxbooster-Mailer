@@ -1,6 +1,9 @@
 # Inboxbooster-Mailer
+
 Cloud native Open Source MTA. 
 A typical Intel 4 core Xeon Haswell server has a throughput of > 10 emails per second.
+
+[Test it quickly.](README-QUICKSTART.md)
 
 [Changelog](CHANGELOG.md)
 
