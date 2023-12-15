@@ -8,7 +8,7 @@ Jinja2==3.1.2
 jmespath==1.0.1
 MarkupSafe==2.1.2
 python-dateutil==2.8.2
-PyYAML==6.0
+PyYAML==6.0.1
 redis==4.4.2
 reliable-queue==0.0.10
 s3transfer==0.6.0
