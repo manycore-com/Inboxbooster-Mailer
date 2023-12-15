@@ -98,6 +98,9 @@ postfixlog:
       # We construct messageid and return-path from the transformer/domain-settings/return-path-domain
       # so this value is not as important as in a normal Postfix installation.
       mailname: example.com
+      # Here you can add other main.cf settings you'd like to override. Examples
+      # smtp_tls_note_starttls_offer = yes
+      # smtp_tls_loglevel = 1
     # If no entry, default port 25 will be used.
     master-cf:
       smtpd-port: 25

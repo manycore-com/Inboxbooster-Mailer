@@ -1,6 +1,8 @@
 #!/bin/bash
 
+export PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc_dir_postfix
+
 python \
-  poll_from_reliable_queue.py \
+  main.py \
   --global-config-file=../inboxbooster-mailer-global.yaml.example \
   --customer-config-file=../inboxbooster-mailer-customer.yaml.example
