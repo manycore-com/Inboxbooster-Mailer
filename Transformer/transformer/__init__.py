@@ -52,6 +52,10 @@ class Transformer:
         self.feedback_sender = feedback_sender
         self.x_mailer = x_mailer
         self.is_running = True
+        logging.info("Transformer prio queue: " + str(self.prio_queue))
+        logging.info("Transformer default queue: " + str(self.default_queue))
+        logging.info("Transformer event queue: " + str(self.event_queue))
+        logging.info("Transformer postfix queue: " + str(self.queue_to_postfix))
 
     def close(self):
         self.is_running = False
@@ -158,6 +162,7 @@ class Transformer:
 
             logging.info("Pushing to postfix queue " + self.queue_to_postfix.get_queue_name())
             self.queue_to_postfix.push(parsed_email.as_bytes())
+
             TRANSFORMER_PUSHED_TOTAL.inc()
 
             #client = Client(self.postfix_hostname, self.postfix_port)
