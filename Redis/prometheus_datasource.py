@@ -117,6 +117,11 @@ if __name__ == "__main__":
     event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
     queue_to_postfix = ReliableQueue(queue_to_postfix_name, rq_redis_host, rq_redis_port)
 
+    logging.info("Prometheus datasource: primary queue: " + str(primary_queue))
+    logging.info("Prometheus datasource: default queue: " + str(default_queue))
+    logging.info("Prometheus datasource: event queue: " + str(event_queue))
+    logging.info("Prometheus datasource: queue to postfix: " + str(queue_to_postfix))
+
     app.run(
         host=prometheus_inet_interface,
         port=prometheus_inet_port,
