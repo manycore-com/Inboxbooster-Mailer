@@ -93,6 +93,10 @@ if __name__ == "__main__":
     default_queue = ReliableQueue(default_queue, rq_redis_host, rq_redis_port)
     event_queue = ReliableQueue(event_queue_name, rq_redis_host, rq_redis_port)
 
+    logging.info("Prio Queue: " + str(prio_queue))
+    logging.info("Default Queue: " + str(default_queue))
+    logging.info("Event Queue: " + str(event_queue))
+
     logging.info("Starting Prometheus endpoint")
     start(prometheus_inet_interface, prometheus_inet_port)
 

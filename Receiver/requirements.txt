@@ -24,7 +24,7 @@ pyparsing==3.0.9
 python-dateutil==2.8.2
 PyYAML==6.0
 redis==4.4.2
-reliable-queue==0.0.9
+reliable-queue==0.0.10
 six==1.16.0
 stack-data==0.6.1
 traitlets==5.5.0
