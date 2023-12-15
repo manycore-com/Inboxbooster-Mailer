@@ -6,4 +6,4 @@ certifi==2022.9.24
 prometheus-client==0.15.0
 PyYAML==6.0
 redis==4.4.2
-reliable-queue==0.0.9
+reliable-queue==0.0.10

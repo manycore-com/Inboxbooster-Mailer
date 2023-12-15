@@ -68,6 +68,7 @@ class MessageQueueWriter(object):
 
     def run(self):
         self.event_queue = ReliableQueue(self.event_queue_name, self.rq_redis_host, self.rq_redis_port)
+        logging.info("Event queue: " + str(self.event_queue))
         time.sleep(1)
         while True:
             try:
