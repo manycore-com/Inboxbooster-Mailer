@@ -29,3 +29,8 @@ First release
 ## BackData
 * BackData will send streamid back (if one is provided by Postfix module).
   It will only add streamid if it is not null.
+
+# v1.0.2
+## Transformer
+* Transformer now uses X-Stream-Id as campaign in first part of feedback-id. If not set, 
+  it reverts to transformer.feedback-campaign in the customer-config-file.

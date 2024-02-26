@@ -148,7 +148,7 @@ class Transformer:
 
             self.set_message_id(parsed_email, uuid, return_path_domain)
 
-            self.set_feedback_id(parsed_email, uuid)
+            self.set_feedback_id(parsed_email, streamid, uuid)
 
             self.set_list_unsubscribe(parsed_email, uuid, return_path_domain)
 
@@ -241,11 +241,16 @@ class Transformer:
         logging.debug("Setting email header Message-ID=" + str(parsed_email["Message-ID"]))
 
     # v1: campaign:customer:mailtype:{uuid}
-    def set_feedback_id(self, parsed_email: Message, uuid: str):
+    def set_feedback_id(self,
+                        parsed_email: Message,
+                        campaign: Optional[str],
+                        customer: str):
+        if not campaign:
+            campaign = self.feedback_campaign
         feedback_id = (
-            str(self.feedback_campaign) +
+            str(campaign) +
             ":" +
-            str(uuid) +
+            str(customer) +
             ":" +
             str(self.feedback_mail_type) +
             ":" +
