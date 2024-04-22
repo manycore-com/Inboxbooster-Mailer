@@ -154,11 +154,11 @@ class Transformer:
 
             self.cleanup_headers(parsed_email)
 
-            self.set_dkim(parsed_email, from_address_domain, selector)
-
             self.set_xreturnpathib(parsed_email, uuid, return_path_domain)
 
             self.inject_beacon(parsed_email, from_address_domain, streamid)
+
+            self.set_dkim(parsed_email, from_address_domain, selector)
 
             logging.info("Pushing to postfix queue " + self.queue_to_postfix.get_queue_name())
             self.queue_to_postfix.push(parsed_email.as_bytes())
@@ -210,7 +210,7 @@ class Transformer:
     def set_dkim(self, parsed_email: Message, from_address_domain: str, selector: str):
         msg_data = parsed_email.as_bytes()
         # TODO add list-unsubscribe to headers to sign
-        headers = [b"To", b"From", b"Subject"]
+        headers = [b"To", b"From", b"Subject", b"Feedback-ID"]
         sig = dkim.sign(
             message=msg_data,
             selector=str(selector).encode(),
